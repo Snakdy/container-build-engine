@@ -1,0 +1,5 @@
+base: scratch
+statements:
+  - name: env
+    options:
+      FOO: bar

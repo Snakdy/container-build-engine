@@ -29,7 +29,7 @@ type Image struct {
 
 func NewImage(opts ...ImageOption) *Image {
 	img := &Image{
-		author:     "github.com/djcass44/all-your-base",
+		author:     "github.com/Snakdy/container-build-engine",
 		env:        nil,
 		baseImage:  empty.Image,
 		username:   DefaultUsername,
@@ -97,8 +97,8 @@ func (ib *Image) Append(ctx context.Context, fs fs.FullFS, platform *v1.Platform
 			MediaType: types.OCILayer,
 			Layer:     layer,
 			History: v1.History{
-				Author:    "all-your-base",
-				CreatedBy: "all-your-base build",
+				Author:    ib.author,
+				CreatedBy: "container-build-engine",
 				Created:   v1.Time{},
 			},
 		},

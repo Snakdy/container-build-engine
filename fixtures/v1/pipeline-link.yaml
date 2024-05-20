@@ -1,0 +1,5 @@
+base: scratch
+statements:
+  - name: link
+    options:
+      "/foo.txt": "/bar.txt"

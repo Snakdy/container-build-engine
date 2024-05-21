@@ -6,6 +6,7 @@ import (
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 	"github.com/Snakdy/container-build-engine/pkg/containers"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
+	"github.com/Snakdy/container-build-engine/pkg/useradd"
 	"github.com/chainguard-dev/go-apk/pkg/fs"
 	"github.com/go-logr/logr"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -67,6 +68,11 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 		WorkingDirectory: b.workingDir,
 		FS:               fs.NewMemFS(),
 		ConfigFile:       cfg,
+	}
+
+	// create the non-root user
+	if err := useradd.NewUser(ctx, buildContext.FS, DefaultUsername, 1001); err != nil {
+		return nil, err
 	}
 
 	// run the filesystem mutations

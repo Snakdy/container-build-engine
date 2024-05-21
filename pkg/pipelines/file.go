@@ -51,7 +51,7 @@ func (s *File) Run(ctx *BuildContext) error {
 	//q.Set("checksum", checksum.Integrity)
 	//srcUri.RawQuery = q.Encode()
 
-	log.Info("retrieving file", "file", srcUri.String(), "path", dst)
+	log.V(2).Info("retrieving file", "file", srcUri.String(), "path", dst)
 	client := &getter.Client{
 		Ctx:             ctx.Context,
 		Pwd:             ctx.WorkingDirectory,

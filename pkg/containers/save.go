@@ -9,7 +9,7 @@ import (
 
 func Save(ctx context.Context, img v1.Image, dst, path string) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("path", path, "dst", dst)
-	log.Info("saving image to local file")
+	log.Info("saving image to file")
 	if err := crane.Save(img, dst, path); err != nil {
 		log.Error(err, "failed to save image")
 		return err

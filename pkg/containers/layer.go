@@ -44,14 +44,14 @@ func tarDir(ctx context.Context, fs fullfs.FullFS, username string, platform *v1
 // which is what leads to recursion when we encounter a directory symlink.
 func walkRecursive(ctx context.Context, rootfs fullfs.FullFS, tw *tar.Writer, root, username string, creationTime v1.Time, platform *v1.Platform) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("root", root)
-	log.V(1).Info("walking filesystem")
+	log.V(2).Info("walking filesystem")
 	dirs, err := fs.ReadDir(rootfs, root)
 	if err != nil {
 		return fmt.Errorf("fs.ReadDir(%q): %w", root, err)
 	}
 	for _, d := range dirs {
 		hostPath := filepath.Join(root, d.Name())
-		log.V(1).Info("checking file", "path", hostPath, "dir", d.IsDir())
+		log.V(3).Info("checking file", "path", hostPath, "dir", d.IsDir())
 		if hostPath == root || hostPath == "/" {
 			continue
 		}

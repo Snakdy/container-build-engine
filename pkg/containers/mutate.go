@@ -47,7 +47,7 @@ func toOCIV1ConfigFile(cf *v1.ConfigFile) *v1.ConfigFile {
 // https://github.com/opencontainers/image-spec/blob/main/config.md
 func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	log.V(1).Info("normalising base image")
+	log.V(3).Info("normalising base image")
 	// get the original manifest
 	m, err := base.Manifest()
 	if err != nil {
@@ -75,7 +75,7 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.V(2).Info("checking layer", "mediaType", mediaType)
+		log.V(4).Info("checking layer", "mediaType", mediaType)
 		switch mediaType {
 		case types.DockerLayer:
 			layer, err = tarball.LayerFromOpener(layer.Compressed, tarball.WithMediaType(types.OCILayer))

@@ -12,30 +12,32 @@ import (
 	"strings"
 )
 
-type File struct{}
+type File struct {
+	Options cbev1.Options
+}
 
-func (*File) Run(ctx *BuildContext, options cbev1.Options) error {
+func (s *File) Run(ctx *BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
 
-	path, err := options.GetString("path")
+	path, err := s.Options.GetString("path")
 	if err != nil {
 		return err
 	}
-	fileUri, err := options.GetString("uri")
+	fileUri, err := s.Options.GetString("uri")
 	if err != nil {
 		return err
 	}
-	executable, err := options.GetBool("executable")
+	executable, err := s.Options.GetOptionalBool("executable")
 	if err != nil {
 		return err
 	}
-	subPath, err := options.GetString("sub-path")
+	subPath, err := s.Options.GetOptionalString("sub-path")
 	if err != nil {
 		return err
 	}
 
 	// expand paths using environment variables
-	path = filepath.Clean(os.Expand(path, expandList(ctx.Config.Env)))
+	path = filepath.Clean(os.Expand(path, expandList(ctx.ConfigFile.Config.Env)))
 	dst, err := os.MkdirTemp("", "file-*")
 	if err != nil {
 		log.Error(err, "failed to prepare download directory")
@@ -49,7 +51,7 @@ func (*File) Run(ctx *BuildContext, options cbev1.Options) error {
 	//q.Set("checksum", checksum.Integrity)
 	//srcUri.RawQuery = q.Encode()
 
-	log.Info("downloading file", "file", srcUri.String(), "path", dst)
+	log.Info("retrieving file", "file", srcUri.String(), "path", dst)
 	client := &getter.Client{
 		Ctx:             ctx.Context,
 		Pwd:             ctx.WorkingDirectory,
@@ -112,5 +114,13 @@ var getters = map[string]getter.Getter{
 }
 
 func (*File) Name() string {
-	return "file"
+	return StatementFile
+}
+
+func (*File) MutatesConfig() bool {
+	return false
+}
+
+func (*File) MutatesFS() bool {
+	return true
 }

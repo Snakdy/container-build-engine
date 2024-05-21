@@ -6,18 +6,28 @@ import (
 	"github.com/go-logr/logr"
 )
 
-type Env struct{}
+type Env struct {
+	Options cbev1.Options
+}
 
-func (*Env) Run(ctx *BuildContext, options cbev1.Options) error {
+func (s *Env) Run(ctx *BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
 
-	for k, v := range options {
+	for k, v := range s.Options {
 		log.V(5).Info("setting environment variable", "key", k, "value", v)
-		ctx.Config.Env = append(ctx.Config.Env, fmt.Sprintf("%s=%v", k, v))
+		ctx.ConfigFile.Config.Env = append(ctx.ConfigFile.Config.Env, fmt.Sprintf("%s=%v", k, v))
 	}
 	return nil
 }
 
 func (*Env) Name() string {
-	return "env"
+	return StatementEnv
+}
+
+func (*Env) MutatesConfig() bool {
+	return true
+}
+
+func (*Env) MutatesFS() bool {
+	return false
 }

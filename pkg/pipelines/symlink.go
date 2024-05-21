@@ -6,12 +6,14 @@ import (
 	"path/filepath"
 )
 
-type SymbolicLink struct{}
+type SymbolicLink struct {
+	Options cbev1.Options
+}
 
-func (*SymbolicLink) Run(ctx *BuildContext, options cbev1.Options) error {
+func (s *SymbolicLink) Run(ctx *BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
 
-	for k, v := range options {
+	for k, v := range s.Options {
 		srcPath := filepath.Clean(k)
 		dstPath := filepath.Clean(v.(string))
 
@@ -25,5 +27,13 @@ func (*SymbolicLink) Run(ctx *BuildContext, options cbev1.Options) error {
 }
 
 func (*SymbolicLink) Name() string {
-	return "link"
+	return StatementSymbolicLink
+}
+
+func (*SymbolicLink) MutatesConfig() bool {
+	return false
+}
+
+func (*SymbolicLink) MutatesFS() bool {
+	return true
 }

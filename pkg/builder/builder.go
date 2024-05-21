@@ -20,10 +20,17 @@ const (
 	DefaultUsername = "somebody"
 )
 
-func NewBuilder(pipeline cbev1.Pipeline, workingDir string) (*Builder, error) {
+func NewBuilder(pipeline cbev1.Pipeline, statementFinder pipelines.StatementFinder, workingDir string) (*Builder, error) {
+	// if the user didn't specify a statement finder, we
+	// need to use the default one
+	if statementFinder == nil {
+		statementFinder = pipelines.Find
+	}
+	// locate the statements and provide them with
+	// their options
 	statements := make([]pipelines.PipelineStatement, len(pipeline.Statements))
 	for i := range pipeline.Statements {
-		statement := pipelines.Find(pipeline.Statements[i].Name, pipeline.Statements[i].Options)
+		statement := statementFinder(pipeline.Statements[i].Name, pipeline.Statements[i].Options)
 		if statement == nil {
 			return nil, fmt.Errorf("could not find statement '%s'", pipeline.Statements[i].Name)
 		}
@@ -51,7 +58,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 
 	cfg, err := baseImage.ConfigFile()
 	if err != nil {
-		return nil, fmt.Errorf("extracing config: %w", err)
+		return nil, fmt.Errorf("extracting config: %w", err)
 	}
 	cfg = cfg.DeepCopy()
 
@@ -67,7 +74,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 		return nil, err
 	}
 
-	layer, err := containers.NewLayer(ctx, buildContext.FS, platform)
+	layer, err := containers.NewLayer(ctx, buildContext.FS, DefaultUsername, platform)
 	if err != nil {
 		return nil, fmt.Errorf("creating layer: %w", err)
 	}
@@ -94,7 +101,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 		return nil, fmt.Errorf("appending layer: %w", err)
 	}
 
-	_ = b.applyPlatform(cfg, platform)
+	b.applyPlatform(cfg, platform)
 
 	// run the config mutations
 	if err := b.applyConfigMutations(buildContext); err != nil {
@@ -113,7 +120,7 @@ func (b *Builder) applyPath(cfg *v1.ConfigFile) {
 	var found bool
 	for i, e := range cfg.Config.Env {
 		if strings.HasPrefix(e, "PATH=") {
-			cfg.Config.Env[i] = cfg.Config.Env[i] + fmt.Sprintf(":/home/%s/.local/bin:/home/%s/bin", DefaultUsername, DefaultUsername)
+			cfg.Config.Env[i] = cfg.Config.Env[i] + fmt.Sprintf(":%s:%s", filepath.Join("/home", DefaultUsername, ".local", "bin"), filepath.Join("/home", DefaultUsername, "bin"))
 			found = true
 		}
 	}
@@ -122,7 +129,7 @@ func (b *Builder) applyPath(cfg *v1.ConfigFile) {
 	}
 }
 
-func (b *Builder) applyPlatform(cfg *v1.ConfigFile, platform *v1.Platform) error {
+func (b *Builder) applyPlatform(cfg *v1.ConfigFile, platform *v1.Platform) {
 	// copy platform metadata
 	cfg.OS = platform.OS
 	cfg.Architecture = platform.Architecture
@@ -137,8 +144,6 @@ func (b *Builder) applyPlatform(cfg *v1.ConfigFile, platform *v1.Platform) error
 	if cfg.Config.Labels == nil {
 		cfg.Config.Labels = map[string]string{}
 	}
-
-	return nil
 }
 
 func (b *Builder) applyFSMutations(ctx *pipelines.BuildContext) error {

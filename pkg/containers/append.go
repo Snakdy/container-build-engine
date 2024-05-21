@@ -3,7 +3,6 @@ package containers
 import (
 	"context"
 	"fmt"
-	"github.com/Snakdy/container-build-engine/pkg/oci/empty"
 	"path/filepath"
 	"strings"
 
@@ -16,7 +15,6 @@ import (
 
 const MagicImageScratch = "scratch"
 const DefaultPath = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/somebody/.local/bin"
-const DefaultUsername = "somebody"
 
 type Image struct {
 	author     string
@@ -27,60 +25,12 @@ type Image struct {
 	cmd        []string
 }
 
-func NewImage(opts ...ImageOption) *Image {
-	img := &Image{
-		author:     "github.com/Snakdy/container-build-engine",
-		env:        nil,
-		baseImage:  empty.Image,
-		username:   DefaultUsername,
-		entrypoint: []string{"/bin/sh"},
-		cmd:        nil,
-	}
-
-	for _, opt := range opts {
-		opt(img)
-	}
-
-	return img
-}
-
-type ImageOption func(image *Image)
-
-func WithBaseImage(img v1.Image) ImageOption {
-	return func(image *Image) {
-		image.baseImage = img
-	}
-}
-
-func WithEnv(env ...string) ImageOption {
-	return func(image *Image) {
-		image.env = env
-	}
-}
-
-func WithUsername(s string) ImageOption {
-	return func(image *Image) {
-		image.username = s
-	}
-}
-
-func WithEntrypoint(ep, cmd []string) ImageOption {
-	return func(image *Image) {
-		if ep != nil {
-			image.entrypoint = ep
-		}
-		if cmd != nil {
-			image.cmd = cmd
-		}
-	}
-}
-
 func (ib *Image) Append(ctx context.Context, fs fs.FullFS, platform *v1.Platform) (v1.Image, error) {
 	log := logr.FromContextOrDiscard(ctx)
 
 	// create our new layer
 	log.Info("containerising filesystem")
-	layer, err := NewLayer(ctx, fs, platform)
+	layer, err := NewLayer(ctx, fs, "somebody", platform)
 	if err != nil {
 		return nil, err
 	}

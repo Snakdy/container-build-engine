@@ -22,7 +22,9 @@ func TestNewBuilderFromStatements(t *testing.T) {
 	require.NoError(t, err)
 
 	builder := NewBuilderFromStatements("scratch", wd, []pipelines.PipelineStatement{
-		&pipelines.Env{Options: map[string]any{"FOO": "bar"}},
+		&pipelines.Env{Options: map[string]any{
+			"FOO": "bar",
+		}},
 		&pipelines.File{Options: map[string]any{
 			"uri":  "https://ftp.gnu.org/gnu/hello/hello-2.12.tar.gz?checksum=cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab&archive=false",
 			"path": "/hello-2.12.tar.gz",
@@ -32,6 +34,7 @@ func TestNewBuilderFromStatements(t *testing.T) {
 			"path": "/test.txt",
 		}},
 	})
+
 	img, err := builder.Build(ctx, platform)
 	assert.NoError(t, err)
 	assert.NotNil(t, img)

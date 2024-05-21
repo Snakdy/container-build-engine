@@ -2,37 +2,20 @@ package v1
 
 import (
 	"fmt"
-	"strconv"
 )
 
-func (o Options) GetOptionalString(key string) (string, error) {
+func GetOptional[T any](o Options, key string) (T, error) {
 	val, ok := o[key]
 	if !ok {
-		return "", nil
+		return *new(T), nil
 	}
-	return val.(string), nil
+	return val.(T), nil
 }
 
-func (o Options) GetString(key string) (string, error) {
+func GetRequired[T any](o Options, key string) (T, error) {
 	val, ok := o[key]
 	if !ok {
-		return "", fmt.Errorf("key '%s' not found", key)
+		return *new(T), fmt.Errorf("key '%s' not found", key)
 	}
-	return val.(string), nil
-}
-
-func (o Options) GetOptionalBool(key string) (bool, error) {
-	val, ok := o[key]
-	if !ok {
-		return false, nil
-	}
-	return strconv.ParseBool(val.(string))
-}
-
-func (o Options) GetBool(key string) (bool, error) {
-	val, ok := o[key]
-	if !ok {
-		return false, fmt.Errorf("key '%s' not found", key)
-	}
-	return strconv.ParseBool(val.(string))
+	return val.(T), nil
 }

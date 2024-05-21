@@ -17,8 +17,8 @@ import (
 	"strings"
 )
 
-func NewLayer(ctx context.Context, fs fullfs.FullFS, platform *v1.Platform) (v1.Layer, error) {
-	layerBuf, err := tarDir(ctx, fs, platform)
+func NewLayer(ctx context.Context, fs fullfs.FullFS, username string, platform *v1.Platform) (v1.Layer, error) {
+	layerBuf, err := tarDir(ctx, fs, username, platform)
 	if err != nil {
 		return nil, fmt.Errorf("tarring data: %w", err)
 	}
@@ -28,12 +28,12 @@ func NewLayer(ctx context.Context, fs fullfs.FullFS, platform *v1.Platform) (v1.
 	}, tarball.WithCompressedCaching, tarball.WithMediaType(types.OCILayer))
 }
 
-func tarDir(ctx context.Context, fs fullfs.FullFS, platform *v1.Platform) (*bytes.Buffer, error) {
+func tarDir(ctx context.Context, fs fullfs.FullFS, username string, platform *v1.Platform) (*bytes.Buffer, error) {
 	buf := bytes.NewBuffer(nil)
 	tw := tar.NewWriter(buf)
 	defer tw.Close()
 
-	if err := walkRecursive(ctx, fs, tw, "/", v1.Time{}, platform); err != nil {
+	if err := walkRecursive(ctx, fs, tw, "/", username, v1.Time{}, platform); err != nil {
 		return nil, err
 	}
 	return buf, nil
@@ -42,7 +42,7 @@ func tarDir(ctx context.Context, fs fullfs.FullFS, platform *v1.Platform) (*byte
 // walkRecursive performs a filepath.Walk of the given root directory adding it
 // to the provided tar.Writer with root -> chroot.  All symlinks are dereferenced,
 // which is what leads to recursion when we encounter a directory symlink.
-func walkRecursive(ctx context.Context, rootfs fullfs.FullFS, tw *tar.Writer, root string, creationTime v1.Time, platform *v1.Platform) error {
+func walkRecursive(ctx context.Context, rootfs fullfs.FullFS, tw *tar.Writer, root, username string, creationTime v1.Time, platform *v1.Platform) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("root", root)
 	log.V(1).Info("walking filesystem")
 	dirs, err := fs.ReadDir(rootfs, root)
@@ -58,7 +58,7 @@ func walkRecursive(ctx context.Context, rootfs fullfs.FullFS, tw *tar.Writer, ro
 
 		// hacky method of setting the uid...
 		uid := 0
-		if hostPath == "/home/somebody" || strings.HasPrefix(hostPath, "/home/somebody") {
+		if hostPath == filepath.Join("/home", username) || strings.HasPrefix(hostPath, filepath.Join("/home", username)) {
 			log.V(4).Info("adding user owned file")
 			uid = 1001
 		}
@@ -111,7 +111,7 @@ func walkRecursive(ctx context.Context, rootfs fullfs.FullFS, tw *tar.Writer, ro
 
 		// Skip other directories.
 		if info.Mode().IsDir() && hostPath != root && hostPath != "/" {
-			if err := walkRecursive(ctx, rootfs, tw, hostPath, creationTime, platform); err != nil {
+			if err := walkRecursive(ctx, rootfs, tw, hostPath, username, creationTime, platform); err != nil {
 				return err
 			}
 			continue

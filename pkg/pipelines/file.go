@@ -19,19 +19,19 @@ type File struct {
 func (s *File) Run(ctx *BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
 
-	path, err := s.Options.GetString("path")
+	path, err := cbev1.GetRequired[string](s.Options, "path")
 	if err != nil {
 		return err
 	}
-	fileUri, err := s.Options.GetString("uri")
+	fileUri, err := cbev1.GetRequired[string](s.Options, "uri")
 	if err != nil {
 		return err
 	}
-	executable, err := s.Options.GetOptionalBool("executable")
+	executable, err := cbev1.GetOptional[bool](s.Options, "executable")
 	if err != nil {
 		return err
 	}
-	subPath, err := s.Options.GetOptionalString("sub-path")
+	subPath, err := cbev1.GetOptional[string](s.Options, "sub-path")
 	if err != nil {
 		return err
 	}

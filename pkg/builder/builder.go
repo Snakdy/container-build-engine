@@ -13,7 +13,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/types"
 )
 
-func NewBuilder(pipeline cbev1.Pipeline) (*Builder, error) {
+func NewBuilder(pipeline cbev1.Pipeline, workingDir string) (*Builder, error) {
 	statements := make([]pipelines.PipelineStatement, len(pipeline.Statements))
 	for i := range pipeline.Statements {
 		statement := pipelines.Find(pipeline.Statements[i].Name, pipeline.Statements[i].Options)
@@ -22,12 +22,13 @@ func NewBuilder(pipeline cbev1.Pipeline) (*Builder, error) {
 		}
 		statements[i] = statement
 	}
-	return NewBuilderFromStatements(pipeline.Base, statements), nil
+	return NewBuilderFromStatements(pipeline.Base, workingDir, statements), nil
 }
 
-func NewBuilderFromStatements(baseRef string, statements []pipelines.PipelineStatement) *Builder {
+func NewBuilderFromStatements(baseRef, workingDir string, statements []pipelines.PipelineStatement) *Builder {
 	return &Builder{
 		baseRef:    baseRef,
+		workingDir: workingDir,
 		statements: statements,
 	}
 }
@@ -49,7 +50,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 
 	buildContext := &pipelines.BuildContext{
 		Context:          ctx,
-		WorkingDirectory: "",
+		WorkingDirectory: b.workingDir,
 		FS:               fs.NewMemFS(),
 		ConfigFile:       cfg,
 	}

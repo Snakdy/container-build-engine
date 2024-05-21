@@ -11,6 +11,13 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/types"
+	"path/filepath"
+	"strings"
+)
+
+const (
+	DefaultPath     = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/somebody/.local/bin:/home/somebody/bin"
+	DefaultUsername = "somebody"
 )
 
 func NewBuilder(pipeline cbev1.Pipeline, workingDir string) (*Builder, error) {
@@ -37,7 +44,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	log := logr.FromContextOrDiscard(ctx)
 	log.Info("building image")
 
-	baseImage, err := containers.Pull(ctx, b.baseRef)
+	baseImage, err := containers.Get(ctx, b.baseRef)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +72,11 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 		return nil, fmt.Errorf("creating layer: %w", err)
 	}
 
+	// convert the base image to OCI format
+	if mt, err := baseImage.MediaType(); err == nil {
+		log.V(1).Info("detected base image media type", "mediaType", mt)
+	}
+
 	// append our layer
 	layers := []mutate.Addendum{
 		{
@@ -88,11 +100,26 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	if err := b.applyConfigMutations(buildContext); err != nil {
 		return nil, err
 	}
+
+	// package everything up
 	img, err := mutate.ConfigFile(withData, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("mutating config: %w", err)
 	}
 	return img, nil
+}
+
+func (b *Builder) applyPath(cfg *v1.ConfigFile) {
+	var found bool
+	for i, e := range cfg.Config.Env {
+		if strings.HasPrefix(e, "PATH=") {
+			cfg.Config.Env[i] = cfg.Config.Env[i] + fmt.Sprintf(":/home/%s/.local/bin:/home/%s/bin", DefaultUsername, DefaultUsername)
+			found = true
+		}
+	}
+	if !found {
+		cfg.Config.Env = append(cfg.Config.Env, "PATH="+DefaultPath)
+	}
 }
 
 func (b *Builder) applyPlatform(cfg *v1.ConfigFile, platform *v1.Platform) error {
@@ -102,6 +129,14 @@ func (b *Builder) applyPlatform(cfg *v1.ConfigFile, platform *v1.Platform) error
 	cfg.OSVersion = platform.OSVersion
 	cfg.Variant = platform.Variant
 	cfg.OSFeatures = platform.OSFeatures
+
+	// set the user
+	cfg.Config.WorkingDir = filepath.Join("/home", DefaultUsername)
+	cfg.Config.User = DefaultUsername
+
+	if cfg.Config.Labels == nil {
+		cfg.Config.Labels = map[string]string{}
+	}
 
 	return nil
 }

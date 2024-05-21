@@ -21,7 +21,7 @@ func TestNewBuilderFromStatements(t *testing.T) {
 	platform, err := v1.ParsePlatform("linux/amd64")
 	require.NoError(t, err)
 
-	builder := NewBuilderFromStatements("harbor.dcas.dev/docker.io/library/busybox:latest", wd, []pipelines.PipelineStatement{
+	builder := NewBuilderFromStatements("scratch", wd, []pipelines.PipelineStatement{
 		&pipelines.Env{Options: map[string]any{"FOO": "bar"}},
 		&pipelines.File{Options: map[string]any{
 			"uri":  "https://ftp.gnu.org/gnu/hello/hello-2.12.tar.gz?checksum=cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab&archive=false",

@@ -9,7 +9,11 @@ func GetOptional[T any](o Options, key string) (T, error) {
 	if !ok {
 		return *new(T), nil
 	}
-	return val.(T), nil
+	casted, ok := val.(T)
+	if !ok {
+		return *new(T), fmt.Errorf("key '%s' is not a %t", key, val)
+	}
+	return casted, nil
 }
 
 func GetRequired[T any](o Options, key string) (T, error) {
@@ -17,5 +21,9 @@ func GetRequired[T any](o Options, key string) (T, error) {
 	if !ok {
 		return *new(T), fmt.Errorf("key '%s' not found", key)
 	}
-	return val.(T), nil
+	casted, ok := val.(T)
+	if !ok {
+		return *new(T), fmt.Errorf("key '%s' is not a '%t'", key, val)
+	}
+	return casted, nil
 }

@@ -3,6 +3,12 @@ package v1
 type Pipeline struct {
 	Base       string      `json:"base"`
 	Statements []Statement `json:"statements"`
+	Config     Config      `json:"config"`
+}
+
+type Config struct {
+	Entrypoint []string `json:"entrypoint"`
+	Command    []string `json:"command"`
 }
 
 type Statement struct {

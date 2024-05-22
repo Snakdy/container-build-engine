@@ -17,3 +17,6 @@ statements:
     name: env
     options:
       CHECKSUM: "cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab"
+config:
+  command:
+    - /bin/sh

@@ -125,7 +125,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 		return nil, err
 	}
 
-	b.applyPlatform(cfg, platform)
+	b.applyPlatform(ctx, cfg, platform)
 	b.applyPath(cfg)
 
 	// package everything up
@@ -151,7 +151,9 @@ func (b *Builder) applyPath(cfg *v1.ConfigFile) {
 	}
 }
 
-func (b *Builder) applyPlatform(cfg *v1.ConfigFile, platform *v1.Platform) {
+func (b *Builder) applyPlatform(ctx context.Context, cfg *v1.ConfigFile, platform *v1.Platform) {
+	log := logr.FromContextOrDiscard(ctx)
+
 	// copy platform metadata
 	cfg.OS = platform.OS
 	cfg.Architecture = platform.Architecture
@@ -165,6 +167,15 @@ func (b *Builder) applyPlatform(cfg *v1.ConfigFile, platform *v1.Platform) {
 
 	if cfg.Config.Labels == nil {
 		cfg.Config.Labels = map[string]string{}
+	}
+
+	if b.options.Entrypoint != nil {
+		log.V(4).Info("overriding entrypoint", "before", cfg.Config.Entrypoint, "after", b.options.Entrypoint)
+		cfg.Config.Entrypoint = b.options.Entrypoint
+	}
+	if b.options.Command != nil {
+		log.V(4).Info("overriding command", "before", cfg.Config.Cmd, "after", b.options.Command)
+		cfg.Config.Cmd = b.options.Command
 	}
 }
 

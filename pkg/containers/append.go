@@ -25,6 +25,7 @@ type Image struct {
 	cmd        []string
 }
 
+// Deprecated
 func (ib *Image) Append(ctx context.Context, fs fs.FullFS, platform *v1.Platform) (v1.Image, error) {
 	log := logr.FromContextOrDiscard(ctx)
 

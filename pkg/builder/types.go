@@ -11,6 +11,8 @@ type Builder struct {
 type Options struct {
 	WorkingDir string
 	Username   string
+	Entrypoint []string
+	Command    []string
 }
 
 func (o *Options) GetUsername() string {

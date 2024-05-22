@@ -5,14 +5,17 @@ import cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 type StatementFinder = func(name string, options cbev1.Options) PipelineStatement
 
 func Find(name string, options cbev1.Options) PipelineStatement {
+	var s PipelineStatement
 	switch name {
 	case StatementEnv:
-		return &Env{Options: options}
+		s = &Env{}
 	case StatementFile:
-		return &File{Options: options}
+		s = &File{}
 	case StatementSymbolicLink:
-		return &SymbolicLink{Options: options}
+		s = &SymbolicLink{}
 	default:
 		return nil
 	}
+	s.SetOptions(options)
+	return s
 }

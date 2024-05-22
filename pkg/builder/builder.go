@@ -3,9 +3,9 @@ package builder
 import (
 	"context"
 	"fmt"
-	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 	"github.com/Snakdy/container-build-engine/pkg/containers"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
+	"github.com/Snakdy/container-build-engine/pkg/pipelines/stategraph"
 	"github.com/Snakdy/container-build-engine/pkg/useradd"
 	"github.com/chainguard-dev/go-apk/pkg/fs"
 	"github.com/go-logr/logr"
@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/types"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -21,31 +22,39 @@ const (
 	DefaultUsername = "somebody"
 )
 
-func NewBuilder(pipeline cbev1.Pipeline, statementFinder pipelines.StatementFinder, workingDir string) (*Builder, error) {
-	// if the user didn't specify a statement finder, we
-	// need to use the default one
-	if statementFinder == nil {
-		statementFinder = pipelines.Find
+func NewBuilder(ctx context.Context, baseRef, workingDir string, statements []pipelines.OrderedPipelineStatement) (*Builder, error) {
+	log := logr.FromContextOrDiscard(ctx)
+
+	// assemble the statement graph, so we know what
+	// order to run them in
+	graph := stategraph.New()
+	for i := range statements {
+		if err := graph.DependOn(statements[i]); err != nil {
+			return nil, err
+		}
 	}
+	orderedNames := graph.TopoSorted()
+
 	// locate the statements and provide them with
 	// their options
-	statements := make([]pipelines.PipelineStatement, len(pipeline.Statements))
-	for i := range pipeline.Statements {
-		statement := statementFinder(pipeline.Statements[i].Name, pipeline.Statements[i].Options)
-		if statement == nil {
-			return nil, fmt.Errorf("could not find statement '%s'", pipeline.Statements[i].Name)
+	orderedStatements := make([]pipelines.PipelineStatement, len(orderedNames))
+	log.V(3).Info("assembled statement dependency graph", "orderedNames", orderedNames)
+	for i := range orderedNames {
+		// get the actual statement
+		idx := slices.IndexFunc(statements, func(statement pipelines.OrderedPipelineStatement) bool {
+			return statement.ID == orderedNames[i]
+		})
+		if idx < 0 {
+			return nil, fmt.Errorf("could not locate statement in dependency tree")
 		}
-		statements[i] = statement
+		orderedStatements[i] = statements[idx].Statement
+		orderedStatements[i].SetOptions(statements[idx].Options)
 	}
-	return NewBuilderFromStatements(pipeline.Base, workingDir, statements), nil
-}
-
-func NewBuilderFromStatements(baseRef, workingDir string, statements []pipelines.PipelineStatement) *Builder {
 	return &Builder{
 		baseRef:    baseRef,
 		workingDir: workingDir,
-		statements: statements,
-	}
+		statements: orderedStatements,
+	}, nil
 }
 
 func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, error) {
@@ -76,7 +85,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	}
 
 	// run the filesystem mutations
-	if err := b.applyFSMutations(buildContext); err != nil {
+	if err := b.applyMutations(buildContext); err != nil {
 		return nil, err
 	}
 
@@ -108,11 +117,6 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	}
 
 	b.applyPlatform(cfg, platform)
-
-	// run the config mutations
-	if err := b.applyConfigMutations(buildContext); err != nil {
-		return nil, err
-	}
 
 	// package everything up
 	img, err := mutate.ConfigFile(withData, cfg)
@@ -152,27 +156,10 @@ func (b *Builder) applyPlatform(cfg *v1.ConfigFile, platform *v1.Platform) {
 	}
 }
 
-func (b *Builder) applyFSMutations(ctx *pipelines.BuildContext) error {
+func (b *Builder) applyMutations(ctx *pipelines.BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
-	log.Info("applying fs mutation pipelines")
+	log.Info("applying mutation pipelines")
 	for _, pipeline := range b.statements {
-		if !pipeline.MutatesFS() {
-			continue
-		}
-		if err := pipeline.Run(ctx); err != nil {
-			return fmt.Errorf("running pipeline: %w", err)
-		}
-	}
-	return nil
-}
-
-func (b *Builder) applyConfigMutations(ctx *pipelines.BuildContext) error {
-	log := logr.FromContextOrDiscard(ctx.Context)
-	log.Info("applying config mutation pipelines")
-	for _, pipeline := range b.statements {
-		if !pipeline.MutatesConfig() {
-			continue
-		}
 		if err := pipeline.Run(ctx); err != nil {
 			return fmt.Errorf("running pipeline: %w", err)
 		}

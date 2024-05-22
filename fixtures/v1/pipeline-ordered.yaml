@@ -1,0 +1,19 @@
+base: harbor.dcas.dev/docker.io/alpine:3.19
+statements:
+  - id: download-file
+    name: file
+    options:
+      path: /home/somebody/
+      uri: https://${HOST}/gnu/hello/hello-2.12.tar.gz?checksum=${CHECKSUM}&archive=false
+      executable: true
+    depends-on:
+      - set-host
+      - set-checksum
+  - id: set-host
+    name: env
+    options:
+      HOST: "ftp.gnu.org"
+  - id: set-checksum
+    name: env
+    options:
+      CHECKSUM: "cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab"

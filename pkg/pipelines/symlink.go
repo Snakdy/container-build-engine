@@ -7,13 +7,13 @@ import (
 )
 
 type SymbolicLink struct {
-	Options cbev1.Options
+	options cbev1.Options
 }
 
 func (s *SymbolicLink) Run(ctx *BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
 
-	for k, v := range s.Options {
+	for k, v := range s.options {
 		srcPath := filepath.Clean(k)
 		dstPath := filepath.Clean(v.(string))
 
@@ -36,4 +36,8 @@ func (*SymbolicLink) MutatesConfig() bool {
 
 func (*SymbolicLink) MutatesFS() bool {
 	return true
+}
+
+func (s *SymbolicLink) SetOptions(options cbev1.Options) {
+	s.options = options
 }

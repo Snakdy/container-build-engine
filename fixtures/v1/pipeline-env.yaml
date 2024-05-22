@@ -1,5 +1,6 @@
 base: scratch
 statements:
-  - name: env
+  - id: set-env
+    name: env
     options:
       FOO: bar

@@ -1,0 +1,14 @@
+project_name: container-build-engine
+builds:
+  - env: [CGO_ENABLED=0]
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+archives:
+  - format: tar.gz
+    wrap_in_directory: false
+    files:
+      - LICENSE
+      - README.md

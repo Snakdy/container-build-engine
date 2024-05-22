@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 	"github.com/Snakdy/container-build-engine/pkg/builder"
 	"github.com/Snakdy/container-build-engine/pkg/containers"
+	"github.com/Snakdy/container-build-engine/pkg/pipelines"
 	"github.com/go-logr/logr"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/spf13/cobra"
@@ -71,7 +73,7 @@ func build(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	b, err := builder.NewBuilder(cfg, nil, wd)
+	b, err := newBuilder(cmd.Context(), cfg, nil, wd)
 	if err != nil {
 		return err
 	}
@@ -104,4 +106,29 @@ func readConfig(s string) (cbev1.Pipeline, error) {
 		return cbev1.Pipeline{}, err
 	}
 	return config, nil
+}
+
+// newBuilder converts our cbev1.Pipeline into the underlying pipeline
+// resources.
+func newBuilder(ctx context.Context, pipeline cbev1.Pipeline, statementFinder pipelines.StatementFinder, workingDir string) (*builder.Builder, error) {
+	// if the user didn't specify a statement finder, we
+	// need to use the default one
+	if statementFinder == nil {
+		statementFinder = pipelines.Find
+	}
+
+	orderedStatements := make([]pipelines.OrderedPipelineStatement, len(pipeline.Statements))
+	for i := range pipeline.Statements {
+		statement := statementFinder(pipeline.Statements[i].Name, pipeline.Statements[i].Options)
+		if statement == nil {
+			return nil, fmt.Errorf("could not find statement '%s'", pipeline.Statements[i].Name)
+		}
+		orderedStatements[i] = pipelines.OrderedPipelineStatement{
+			ID:        pipeline.Statements[i].ID,
+			Statement: statement,
+			DependsOn: pipeline.Statements[i].DependsOn,
+		}
+	}
+
+	return builder.NewBuilder(ctx, pipeline.Base, workingDir, orderedStatements)
 }

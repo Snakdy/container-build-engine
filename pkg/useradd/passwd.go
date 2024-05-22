@@ -41,7 +41,9 @@ func NewUser(ctx context.Context, rootfs fs.FullFS, username string, uid int) er
 		log.Error(err, "failed to open passwd file")
 		return err
 	}
-	if _, err := file.Write([]byte(fmt.Sprintf("%s:x:%d:0:Linux User,,,:/home/%s:%s\n", username, uid, username, DefaultShell))); err != nil {
+	passwd := []byte(fmt.Sprintf("%s:x:%d:0:Linux User,,,:%s:%s\n", username, uid, filepath.Join("/home", username), DefaultShell))
+	log.V(5).Info("writing passwd file", "path", path, "content", string(passwd))
+	if _, err := file.Write(passwd); err != nil {
 		log.Error(err, "failed to write to passwd file")
 		return err
 	}

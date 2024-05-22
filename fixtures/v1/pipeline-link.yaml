@@ -1,5 +1,6 @@
 base: scratch
 statements:
+  - id: set-links
   - name: link
     options:
       "/foo.txt": "/bar.txt"

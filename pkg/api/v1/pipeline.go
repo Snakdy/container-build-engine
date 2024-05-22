@@ -6,8 +6,10 @@ type Pipeline struct {
 }
 
 type Statement struct {
-	Name    string  `json:"name"`
-	Options Options `json:"options"`
+	ID        string   `json:"id"`
+	Name      string   `json:"name"`
+	Options   Options  `json:"options"`
+	DependsOn []string `json:"depends-on"`
 }
 
 type Options map[string]any

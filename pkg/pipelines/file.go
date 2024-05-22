@@ -13,25 +13,29 @@ import (
 )
 
 type File struct {
-	Options cbev1.Options
+	options cbev1.Options
 }
 
 func (s *File) Run(ctx *BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
 
-	path, err := cbev1.GetRequired[string](s.Options, "path")
+	path, err := cbev1.GetRequired[string](s.options, "path")
 	if err != nil {
 		return err
 	}
-	fileUri, err := cbev1.GetRequired[string](s.Options, "uri")
+	fileUri, err := cbev1.GetRequired[string](s.options, "uri")
 	if err != nil {
 		return err
 	}
-	executable, err := cbev1.GetOptional[bool](s.Options, "executable")
+	executable, err := cbev1.GetOptional[bool](s.options, "executable")
 	if err != nil {
 		return err
 	}
-	subPath, err := cbev1.GetOptional[string](s.Options, "sub-path")
+	subPath, err := cbev1.GetOptional[string](s.options, "sub-path")
+	if err != nil {
+		return err
+	}
+	checksum, err := cbev1.GetOptional[string](s.options, "checksum")
 	if err != nil {
 		return err
 	}
@@ -47,9 +51,12 @@ func (s *File) Run(ctx *BuildContext) error {
 	if err != nil {
 		return err
 	}
-	//q := srcUri.Query()
-	//q.Set("checksum", checksum.Integrity)
-	//srcUri.RawQuery = q.Encode()
+	if checksum != "" {
+		log.V(2).Info("validating checksum", "uri", fileUri, "checksum", checksum)
+		q := srcUri.Query()
+		q.Set("checksum", checksum)
+		srcUri.RawQuery = q.Encode()
+	}
 
 	log.V(2).Info("retrieving file", "file", srcUri.String(), "path", dst)
 	client := &getter.Client{
@@ -123,4 +130,8 @@ func (*File) MutatesConfig() bool {
 
 func (*File) MutatesFS() bool {
 	return true
+}
+
+func (s *File) SetOptions(options cbev1.Options) {
+	s.options = options
 }

@@ -21,7 +21,7 @@ func TestNewBuilderFromStatements(t *testing.T) {
 	platform, err := v1.ParsePlatform("linux/amd64")
 	require.NoError(t, err)
 
-	builder, err := NewBuilder(ctx, "scratch", wd, []pipelines.OrderedPipelineStatement{
+	builder, err := NewBuilder(ctx, "scratch", []pipelines.OrderedPipelineStatement{
 		{
 			ID: "apply-env",
 			Options: map[string]any{
@@ -49,7 +49,7 @@ func TestNewBuilderFromStatements(t *testing.T) {
 			Statement: &pipelines.File{},
 			DependsOn: nil,
 		},
-	})
+	}, Options{WorkingDir: wd})
 	assert.NoError(t, err)
 	assert.NotNil(t, builder)
 

@@ -12,6 +12,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
+const MagicImageScratch = "scratch"
+
 func Get(ctx context.Context, ref string) (v1.Image, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("ref", ref)
 	log.Info("getting image")

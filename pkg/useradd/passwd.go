@@ -36,14 +36,19 @@ func NewUser(ctx context.Context, rootfs fs.FullFS, username string, uid int) er
 		log.Error(err, "failed to establish directory structure")
 		return err
 	}
-	file, err := rootfs.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		log.Error(err, "failed to open passwd file")
-		return err
+	var passwdFile string
+	if data, err := rootfs.ReadFile(path); err != nil {
+		if !os.IsNotExist(err) {
+			log.Error(err, "failed to read passwd file")
+			return err
+		}
+	} else {
+		passwdFile = string(data)
 	}
 	passwd := []byte(fmt.Sprintf("%s:x:%d:0:Linux User,,,:%s:%s\n", username, uid, filepath.Join("/home", username), DefaultShell))
 	log.V(5).Info("writing passwd file", "path", path, "content", string(passwd))
-	if _, err := file.Write(passwd); err != nil {
+	passwdFile = passwdFile + string(passwd)
+	if err := rootfs.WriteFile(path, []byte(passwdFile), 0644); err != nil {
 		log.Error(err, "failed to write to passwd file")
 		return err
 	}

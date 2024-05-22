@@ -9,10 +9,11 @@ type Builder struct {
 }
 
 type Options struct {
-	WorkingDir string
-	Username   string
-	Entrypoint []string
-	Command    []string
+	WorkingDir      string
+	Username        string
+	Entrypoint      []string
+	Command         []string
+	ForceEntrypoint bool
 }
 
 func (o *Options) GetUsername() string {

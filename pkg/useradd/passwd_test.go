@@ -59,6 +59,7 @@ func TestNewUser(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, expected, string(data))
 	})
+
 	t.Run("existing", func(t *testing.T) {
 		rootfs := setup("./testdata/existing")
 

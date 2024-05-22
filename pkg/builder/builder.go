@@ -169,11 +169,11 @@ func (b *Builder) applyPlatform(ctx context.Context, cfg *v1.ConfigFile, platfor
 		cfg.Config.Labels = map[string]string{}
 	}
 
-	if b.options.Entrypoint != nil {
+	if b.options.Entrypoint != nil || b.options.ForceEntrypoint {
 		log.V(4).Info("overriding entrypoint", "before", cfg.Config.Entrypoint, "after", b.options.Entrypoint)
 		cfg.Config.Entrypoint = b.options.Entrypoint
 	}
-	if b.options.Command != nil {
+	if b.options.Command != nil || b.options.ForceEntrypoint {
 		log.V(4).Info("overriding command", "before", cfg.Config.Cmd, "after", b.options.Command)
 		cfg.Config.Cmd = b.options.Command
 	}

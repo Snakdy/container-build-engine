@@ -17,10 +17,7 @@ import (
 	"strings"
 )
 
-const (
-	DefaultPath     = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/somebody/.local/bin:/home/somebody/bin"
-	DefaultUsername = "somebody"
-)
+const DefaultUsername = "somebody"
 
 func NewBuilder(ctx context.Context, baseRef, workingDir string, statements []pipelines.OrderedPipelineStatement) (*Builder, error) {
 	log := logr.FromContextOrDiscard(ctx)
@@ -150,7 +147,7 @@ func (b *Builder) applyPath(cfg *v1.ConfigFile) {
 		}
 	}
 	if !found {
-		cfg.Config.Env = append(cfg.Config.Env, "PATH="+DefaultPath)
+		cfg.Config.Env = append(cfg.Config.Env, "PATH="+defaultPath(DefaultUsername))
 	}
 }
 
@@ -180,4 +177,8 @@ func (b *Builder) applyMutations(ctx *pipelines.BuildContext) error {
 		}
 	}
 	return nil
+}
+
+func defaultPath(username string) string {
+	return fmt.Sprintf("/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/%s/.local/bin:/home/%s/bin", username, username)
 }

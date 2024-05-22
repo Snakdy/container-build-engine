@@ -78,7 +78,6 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/kendru/darwin/go/depgraph v0.0.0-20230809052043-4d1c7e9d1767 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/levigross/grequests v0.0.0-20190908174114-253788527a1a // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect

@@ -3,6 +3,7 @@ package pipelines
 import (
 	"fmt"
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
+	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
 	"os"
 )
@@ -38,5 +39,8 @@ func (*Env) MutatesFS() bool {
 }
 
 func (s *Env) SetOptions(options cbev1.Options) {
-	s.options = options
+	if s.options == nil {
+		s.options = map[string]any{}
+	}
+	utils.CopyMap(options, s.options)
 }

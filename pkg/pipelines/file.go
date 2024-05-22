@@ -4,6 +4,7 @@ import (
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 	"github.com/Snakdy/container-build-engine/pkg/envs"
 	"github.com/Snakdy/container-build-engine/pkg/files"
+	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-getter"
 	"net/url"
@@ -18,6 +19,7 @@ type File struct {
 
 func (s *File) Run(ctx *BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
+	log.V(7).Info("running statement", "options", s.options)
 
 	path, err := cbev1.GetRequired[string](s.options, "path")
 	if err != nil {
@@ -133,5 +135,8 @@ func (*File) MutatesFS() bool {
 }
 
 func (s *File) SetOptions(options cbev1.Options) {
-	s.options = options
+	if s.options == nil {
+		s.options = map[string]any{}
+	}
+	utils.CopyMap(options, s.options)
 }

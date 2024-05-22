@@ -2,6 +2,7 @@ package pipelines
 
 import (
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
+	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
 	"path/filepath"
 )
@@ -39,5 +40,8 @@ func (*SymbolicLink) MutatesFS() bool {
 }
 
 func (s *SymbolicLink) SetOptions(options cbev1.Options) {
-	s.options = options
+	if s.options == nil {
+		s.options = map[string]any{}
+	}
+	utils.CopyMap(options, s.options)
 }

@@ -130,5 +130,7 @@ func newBuilder(ctx context.Context, pipeline cbev1.Pipeline, statementFinder pi
 		}
 	}
 
-	return builder.NewBuilder(ctx, pipeline.Base, workingDir, orderedStatements)
+	return builder.NewBuilder(ctx, pipeline.Base, orderedStatements, builder.Options{
+		WorkingDir: workingDir,
+	})
 }

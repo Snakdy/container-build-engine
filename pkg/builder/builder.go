@@ -19,7 +19,7 @@ import (
 
 const DefaultUsername = "somebody"
 
-func NewBuilder(ctx context.Context, baseRef, workingDir string, statements []pipelines.OrderedPipelineStatement) (*Builder, error) {
+func NewBuilder(ctx context.Context, baseRef string, statements []pipelines.OrderedPipelineStatement, options Options) (*Builder, error) {
 	log := logr.FromContextOrDiscard(ctx)
 
 	// assemble the statement graph, so we know what
@@ -49,7 +49,7 @@ func NewBuilder(ctx context.Context, baseRef, workingDir string, statements []pi
 	}
 	return &Builder{
 		baseRef:    baseRef,
-		workingDir: workingDir,
+		options:    options,
 		statements: orderedStatements,
 	}, nil
 }
@@ -75,13 +75,13 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 
 	buildContext := &pipelines.BuildContext{
 		Context:          ctx,
-		WorkingDirectory: b.workingDir,
+		WorkingDirectory: b.options.WorkingDir,
 		FS:               fs.NewMemFS(),
 		ConfigFile:       cfg,
 	}
 
 	// create the non-root user
-	if err := useradd.NewUser(ctx, buildContext.FS, DefaultUsername, 1001); err != nil {
+	if err := useradd.NewUser(ctx, buildContext.FS, b.options.GetUsername(), 1001); err != nil {
 		return nil, err
 	}
 
@@ -90,7 +90,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 		return nil, err
 	}
 
-	layer, err := containers.NewLayer(ctx, buildContext.FS, DefaultUsername, platform)
+	layer, err := containers.NewLayer(ctx, buildContext.FS, b.options.GetUsername(), platform)
 	if err != nil {
 		return nil, fmt.Errorf("creating layer: %w", err)
 	}
@@ -142,12 +142,12 @@ func (b *Builder) applyPath(cfg *v1.ConfigFile) {
 	var found bool
 	for i, e := range cfg.Config.Env {
 		if strings.HasPrefix(e, "PATH=") {
-			cfg.Config.Env[i] = cfg.Config.Env[i] + fmt.Sprintf(":%s:%s", filepath.Join("/home", DefaultUsername, ".local", "bin"), filepath.Join("/home", DefaultUsername, "bin"))
+			cfg.Config.Env[i] = cfg.Config.Env[i] + fmt.Sprintf(":%s:%s", filepath.Join("/home", b.options.GetUsername(), ".local", "bin"), filepath.Join("/home", b.options.GetUsername(), "bin"))
 			found = true
 		}
 	}
 	if !found {
-		cfg.Config.Env = append(cfg.Config.Env, "PATH="+defaultPath(DefaultUsername))
+		cfg.Config.Env = append(cfg.Config.Env, "PATH="+defaultPath(b.options.GetUsername()))
 	}
 }
 
@@ -160,8 +160,8 @@ func (b *Builder) applyPlatform(cfg *v1.ConfigFile, platform *v1.Platform) {
 	cfg.OSFeatures = platform.OSFeatures
 
 	// set the user
-	cfg.Config.WorkingDir = filepath.Join("/home", DefaultUsername)
-	cfg.Config.User = DefaultUsername
+	cfg.Config.WorkingDir = filepath.Join("/home", b.options.GetUsername())
+	cfg.Config.User = b.options.GetUsername()
 
 	if cfg.Config.Labels == nil {
 		cfg.Config.Labels = map[string]string{}

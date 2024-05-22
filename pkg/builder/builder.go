@@ -66,6 +66,10 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 		return nil, err
 	}
 
+	if mt, err := baseImage.MediaType(); err == nil {
+		log.V(3).Info("detected base image media type", "mediaType", mt)
+	}
+
 	cfg, err := baseImage.ConfigFile()
 	if err != nil {
 		return nil, fmt.Errorf("extracting config: %w", err)
@@ -98,25 +102,34 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	if mt, err := baseImage.MediaType(); err == nil {
 		log.V(1).Info("detected base image media type", "mediaType", mt)
 	}
+	// write the config file into the base image so that
+	// appending works later on
+	mutatedBase, err := mutate.ConfigFile(baseImage, buildContext.ConfigFile)
+	if err != nil {
+		return nil, fmt.Errorf("mutating config: %w", err)
+	}
 
 	// append our layer
-	layers := []mutate.Addendum{
-		{
-			MediaType: types.OCILayer,
-			Layer:     layer,
-			History: v1.History{
-				Author:    "",
-				CreatedBy: "container-build-engine",
-				Created:   v1.Time{},
-			},
+	log.V(3).Info("appending layer")
+	withData, err := mutate.Append(mutatedBase, mutate.Addendum{
+		MediaType: types.OCILayer,
+		Layer:     layer,
+		History: v1.History{
+			Author:    "",
+			CreatedBy: "container-build-engine",
+			Created:   v1.Time{},
 		},
-	}
-	withData, err := mutate.Append(baseImage, layers...)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("appending layer: %w", err)
 	}
+	cfg, err = withData.ConfigFile()
+	if err != nil {
+		return nil, err
+	}
 
 	b.applyPlatform(cfg, platform)
+	b.applyPath(cfg)
 
 	// package everything up
 	img, err := mutate.ConfigFile(withData, cfg)
@@ -126,6 +139,8 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	return img, nil
 }
 
+// applyPath sets the PATH environment variable.
+// If the variable already exists, it appends to it
 func (b *Builder) applyPath(cfg *v1.ConfigFile) {
 	var found bool
 	for i, e := range cfg.Config.Env {

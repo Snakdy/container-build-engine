@@ -57,7 +57,7 @@ func TestNewUser(t *testing.T) {
 
 		data, err := rootfs.ReadFile(filepath.Join("/etc", "passwd"))
 		require.NoError(t, err)
-		assert.EqualValues(t, expected, string(data))
+		assert.EqualValues(t, expectedEmpty, string(data))
 	})
 
 	t.Run("existing", func(t *testing.T) {
@@ -68,6 +68,6 @@ func TestNewUser(t *testing.T) {
 
 		data, err := rootfs.ReadFile(filepath.Join("/etc", "passwd"))
 		require.NoError(t, err)
-		assert.EqualValues(t, expected, string(data))
+		assert.EqualValues(t, expectedEmpty, string(data))
 	})
 }

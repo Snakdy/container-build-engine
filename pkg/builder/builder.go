@@ -133,7 +133,13 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	if err != nil {
 		return nil, fmt.Errorf("mutating config: %w", err)
 	}
-	return img, nil
+	// remove any randomness in the build
+	// so that we can reproduce it
+	canonicalImage, err := mutate.Canonical(img)
+	if err != nil {
+		return nil, fmt.Errorf("generating canonical image: %w", err)
+	}
+	return canonicalImage, nil
 }
 
 // applyPath sets the PATH environment variable.

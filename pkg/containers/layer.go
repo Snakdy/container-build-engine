@@ -17,6 +17,8 @@ import (
 	"strings"
 )
 
+var creationTime = v1.Time{}
+
 func NewLayer(ctx context.Context, fs fullfs.FullFS, username string, platform *v1.Platform) (v1.Layer, error) {
 	layerBuf, err := tarDir(ctx, fs, username, platform)
 	if err != nil {
@@ -33,7 +35,7 @@ func tarDir(ctx context.Context, fs fullfs.FullFS, username string, platform *v1
 	tw := tar.NewWriter(buf)
 	defer tw.Close()
 
-	if err := walkRecursive(ctx, fs, tw, "/", username, v1.Time{}, platform); err != nil {
+	if err := walkRecursive(ctx, fs, tw, "/", username, platform); err != nil {
 		return nil, err
 	}
 	return buf, nil
@@ -42,7 +44,7 @@ func tarDir(ctx context.Context, fs fullfs.FullFS, username string, platform *v1
 // walkRecursive performs a filepath.Walk of the given root directory adding it
 // to the provided tar.Writer with root -> chroot.  All symlinks are dereferenced,
 // which is what leads to recursion when we encounter a directory symlink.
-func walkRecursive(ctx context.Context, rootfs fullfs.FullFS, tw *tar.Writer, root, username string, creationTime v1.Time, platform *v1.Platform) error {
+func walkRecursive(ctx context.Context, rootfs fullfs.FullFS, tw *tar.Writer, root, username string, platform *v1.Platform) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("root", root)
 	log.V(2).Info("walking filesystem")
 	dirs, err := fs.ReadDir(rootfs, root)
@@ -110,15 +112,15 @@ func walkRecursive(ctx context.Context, rootfs fullfs.FullFS, tw *tar.Writer, ro
 		}
 
 		// Skip other directories.
-		if info.Mode().IsDir() && hostPath != root && hostPath != "/" {
-			if err := walkRecursive(ctx, rootfs, tw, hostPath, username, creationTime, platform); err != nil {
+		if info.Mode().IsDir() && hostPath != root {
+			if err := walkRecursive(ctx, rootfs, tw, hostPath, username, platform); err != nil {
 				return err
 			}
 			continue
 		}
 
 		// Open the file to copy it into the tarball.
-		log.V(4).Info("adding file to tar")
+		log.V(4).Info("adding file to tar", "evalPath", evalPath, "hostPath", hostPath)
 		file, err := rootfs.Open(evalPath)
 		if err != nil {
 			return fmt.Errorf("os.Open(%q): %w", evalPath, err)

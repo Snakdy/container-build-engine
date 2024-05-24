@@ -95,13 +95,18 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 		ConfigFile:       cfg,
 	}
 
-	// create the non-root user
-	if err := useradd.NewUser(ctx, buildContext.FS, b.options.GetUsername(), 1001); err != nil {
+	// create the non-root user directory
+	if err := useradd.NewUserDir(ctx, buildContext.FS, b.options.GetUsername(), 1001); err != nil {
 		return nil, err
 	}
 
 	// run the filesystem mutations
 	if err := b.applyMutations(buildContext); err != nil {
+		return nil, err
+	}
+
+	// create the non-root user
+	if err := useradd.NewUser(ctx, buildContext.FS, b.options.GetUsername(), 1001); err != nil {
 		return nil, err
 	}
 

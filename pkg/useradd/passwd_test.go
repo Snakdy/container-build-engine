@@ -71,3 +71,15 @@ func TestNewUser(t *testing.T) {
 		assert.EqualValues(t, expectedEmpty, string(data))
 	})
 }
+
+func TestNewUserDir(t *testing.T) {
+	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))
+
+	rootfs := fs.NewMemFS()
+
+	err := NewUserDir(ctx, rootfs, "somebody", 1001)
+	assert.NoError(t, err)
+
+	_, err = rootfs.Stat(filepath.Join("/home", "somebody", ".local", "bin"))
+	assert.NotErrorIs(t, err, os.ErrNotExist)
+}

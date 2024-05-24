@@ -11,7 +11,7 @@ import (
 const DefaultShell = "/bin/sh"
 
 // NewUser adds an entry to the /etc/passwd file to create a new Linux
-// user.
+// user. This must be run after regular filesystem mutations (i.e. just before the layer is appended)
 func NewUser(ctx context.Context, rootfs fs.FullFS, username string, uid int) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("username", username, "uid", uid)
 	log.V(1).Info("creating user")
@@ -27,6 +27,15 @@ func NewUser(ctx context.Context, rootfs fs.FullFS, username string, uid int) er
 		log.Error(err, "failed to write to passwd file")
 		return err
 	}
+
+	return nil
+}
+
+// NewUserDir creates the filesystem for a new Linux
+// user.
+func NewUserDir(ctx context.Context, rootfs fs.FullFS, username string, uid int) error {
+	log := logr.FromContextOrDiscard(ctx).WithValues("username", username, "uid", uid)
+	log.V(1).Info("creating user filesystem")
 
 	// create the home directory.
 	// hopefully the permission bits are correct - https://superuser.com/a/165465

@@ -7,8 +7,9 @@ type Pipeline struct {
 }
 
 type Config struct {
-	Entrypoint []string `json:"entrypoint"`
-	Command    []string `json:"command"`
+	OverwriteEntrypoint bool     `json:"overwrite-entrypoint"`
+	Entrypoint          []string `json:"entrypoint"`
+	Command             []string `json:"command"`
 }
 
 type Statement struct {

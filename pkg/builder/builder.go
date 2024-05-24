@@ -12,6 +12,7 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/types"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -73,10 +74,24 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	}
 	cfg = cfg.DeepCopy()
 
+	var filesystem fs.FullFS
+
+	if b.options.DirFS {
+		tmpFs, err := os.MkdirTemp("", "container-build-engine-fs-*")
+		if err != nil {
+			return nil, fmt.Errorf("creating temporary directory: %w", err)
+		}
+		log.V(3).Info("creating tempfs virtual filesystem", "path", tmpFs)
+		filesystem = fs.DirFS(tmpFs)
+	} else {
+		filesystem = fs.NewMemFS()
+		log.V(3).Info("creating in-memory virtual filesystem - this may cause memory issues with large builds")
+	}
+
 	buildContext := &pipelines.BuildContext{
 		Context:          ctx,
 		WorkingDirectory: b.options.WorkingDir,
-		FS:               fs.NewMemFS(),
+		FS:               filesystem,
 		ConfigFile:       cfg,
 	}
 
@@ -112,8 +127,8 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 		MediaType: types.OCILayer,
 		Layer:     layer,
 		History: v1.History{
-			Author:    "",
-			CreatedBy: "container-build-engine",
+			Author:    b.options.Metadata.Author,
+			CreatedBy: b.options.Metadata.GetCreatedBy(),
 			Created:   v1.Time{},
 		},
 	})
@@ -174,6 +189,8 @@ func (b *Builder) applyPlatform(ctx context.Context, cfg *v1.ConfigFile, platfor
 	if cfg.Config.Labels == nil {
 		cfg.Config.Labels = map[string]string{}
 	}
+	// todo support base image annotation hints
+	// https://github.com/google/go-containerregistry/blob/main/cmd/crane/rebase.md#base-image-annotation-hints
 
 	if b.options.Entrypoint != nil || b.options.ForceEntrypoint {
 		log.V(4).Info("overriding entrypoint", "before", cfg.Config.Entrypoint, "after", b.options.Entrypoint)

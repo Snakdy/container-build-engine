@@ -1,6 +1,8 @@
 package builder
 
-import "github.com/Snakdy/container-build-engine/pkg/pipelines"
+import (
+	"github.com/Snakdy/container-build-engine/pkg/pipelines"
+)
 
 type Builder struct {
 	baseRef    string
@@ -14,6 +16,13 @@ type Options struct {
 	Entrypoint      []string
 	Command         []string
 	ForceEntrypoint bool
+	Metadata        MetadataOptions
+	DirFS           bool
+}
+
+type MetadataOptions struct {
+	Author    string
+	CreatedBy string
 }
 
 func (o *Options) GetUsername() string {
@@ -21,4 +30,11 @@ func (o *Options) GetUsername() string {
 		return DefaultUsername
 	}
 	return o.Username
+}
+
+func (o *MetadataOptions) GetCreatedBy() string {
+	if o.CreatedBy == "" {
+		return "container-build-engine"
+	}
+	return o.CreatedBy
 }

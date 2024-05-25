@@ -20,7 +20,7 @@ func (s *Env) Run(ctx *BuildContext) error {
 	for k, v := range s.options {
 		value := os.Expand(v.(string), ExpandList(ctx.ConfigFile.Config.Env))
 		log.V(5).Info("exporting environment variable", "key", k, "value", v, "expandedValue", value)
-		ctx.ConfigFile.Config.Env = setOrAppend(ctx.ConfigFile.Config.Env, k, value)
+		ctx.ConfigFile.Config.Env = SetOrAppend(ctx.ConfigFile.Config.Env, k, value)
 		if err := os.Setenv(k, v.(string)); err != nil {
 			log.Error(err, "could not export environment variable for usage in later stages", "key", k, "value", v, "expandedValue", value)
 			return err
@@ -29,7 +29,7 @@ func (s *Env) Run(ctx *BuildContext) error {
 	return nil
 }
 
-func setOrAppend(vars []string, k, v string) []string {
+func SetOrAppend(vars []string, k, v string) []string {
 	idx := slices.IndexFunc(vars, func(s string) bool {
 		return strings.HasPrefix(s, k+"=")
 	})

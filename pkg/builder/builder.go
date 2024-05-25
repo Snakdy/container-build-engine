@@ -96,6 +96,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	}
 
 	// create the non-root user directory
+	buildContext.ConfigFile.Config.Env = pipelines.SetOrAppend(buildContext.ConfigFile.Config.Env, "HOME", filepath.Join("/home", b.options.GetUsername()))
 	if err := useradd.NewUserDir(ctx, buildContext.FS, b.options.GetUsername(), 1001); err != nil {
 		return nil, err
 	}
@@ -106,7 +107,6 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	}
 
 	// create the non-root user
-	buildContext.ConfigFile.Config.Env = pipelines.SetOrAppend(buildContext.ConfigFile.Config.Env, "HOME", filepath.Join("/home", b.options.GetUsername()))
 	if err := useradd.NewUser(ctx, buildContext.FS, b.options.GetUsername(), 1001); err != nil {
 		return nil, err
 	}

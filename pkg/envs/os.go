@@ -11,3 +11,11 @@ func ExpandEnv(s string) string {
 	}
 	return val
 }
+
+func ExpandEnvFunc(s string, mapping func(s string) string) string {
+	val, err := envsubst.Eval(s, mapping)
+	if err != nil {
+		return s
+	}
+	return val
+}

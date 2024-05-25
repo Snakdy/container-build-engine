@@ -2,10 +2,10 @@ package pipelines
 
 import (
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
+	"github.com/Snakdy/container-build-engine/pkg/envs"
 	"github.com/Snakdy/container-build-engine/pkg/files"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
-	"os"
 	"path/filepath"
 )
 
@@ -27,8 +27,8 @@ func (s *Dir) Run(ctx *BuildContext) error {
 	}
 
 	// expand paths
-	src = filepath.Clean(os.Expand(src, ExpandList(ctx.ConfigFile.Config.Env)))
-	dst = filepath.Clean(os.Expand(dst, ExpandList(ctx.ConfigFile.Config.Env)))
+	src = filepath.Clean(envs.ExpandEnvFunc(src, ExpandList(ctx.ConfigFile.Config.Env)))
+	dst = filepath.Clean(envs.ExpandEnvFunc(dst, ExpandList(ctx.ConfigFile.Config.Env)))
 
 	// copy the directory
 	if err := files.CopyDirectory(src, dst, ctx.FS); err != nil {

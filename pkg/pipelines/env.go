@@ -3,6 +3,7 @@ package pipelines
 import (
 	"fmt"
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
+	"github.com/Snakdy/container-build-engine/pkg/envs"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
 	"os"
@@ -18,7 +19,7 @@ func (s *Env) Run(ctx *BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
 
 	for k, v := range s.options {
-		value := os.Expand(v.(string), ExpandList(ctx.ConfigFile.Config.Env))
+		value := envs.ExpandEnvFunc(v.(string), ExpandList(ctx.ConfigFile.Config.Env))
 		log.V(5).Info("exporting environment variable", "key", k, "value", v, "expandedValue", value)
 		ctx.ConfigFile.Config.Env = SetOrAppend(ctx.ConfigFile.Config.Env, k, value)
 		if err := os.Setenv(k, v.(string)); err != nil {

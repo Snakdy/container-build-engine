@@ -43,7 +43,7 @@ func (s *File) Run(ctx *BuildContext) error {
 	}
 
 	// expand paths using environment variables
-	path = filepath.Clean(os.Expand(path, ExpandList(ctx.ConfigFile.Config.Env)))
+	path = filepath.Clean(envs.ExpandEnvFunc(path, ExpandList(ctx.ConfigFile.Config.Env)))
 	dst, err := os.MkdirTemp("", "file-*")
 	if err != nil {
 		log.Error(err, "failed to prepare download directory")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Snakdy/container-build-engine/pkg/containers"
+	"github.com/Snakdy/container-build-engine/pkg/envs"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/stategraph"
 	"github.com/Snakdy/container-build-engine/pkg/useradd"
@@ -200,14 +201,14 @@ func (b *Builder) applyPlatform(ctx context.Context, cfg *v1.ConfigFile, platfor
 
 	if b.options.Entrypoint != nil || b.options.ForceEntrypoint {
 		for i := range b.options.Entrypoint {
-			b.options.Entrypoint[i] = os.Expand(b.options.Entrypoint[i], pipelines.ExpandList(cfg.Config.Env))
+			b.options.Entrypoint[i] = envs.ExpandEnvFunc(b.options.Entrypoint[i], pipelines.ExpandList(cfg.Config.Env))
 		}
 		log.V(4).Info("overriding entrypoint", "before", cfg.Config.Entrypoint, "after", b.options.Entrypoint)
 		cfg.Config.Entrypoint = b.options.Entrypoint
 	}
 	if b.options.Command != nil || b.options.ForceEntrypoint {
 		for i := range b.options.Command {
-			b.options.Command[i] = os.Expand(b.options.Command[i], pipelines.ExpandList(cfg.Config.Env))
+			b.options.Command[i] = envs.ExpandEnvFunc(b.options.Command[i], pipelines.ExpandList(cfg.Config.Env))
 		}
 		log.V(4).Info("overriding command", "before", cfg.Config.Cmd, "after", b.options.Command)
 		cfg.Config.Cmd = b.options.Command

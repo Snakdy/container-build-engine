@@ -27,8 +27,8 @@ func (s *Dir) Run(ctx *BuildContext) error {
 	}
 
 	// expand paths
-	src = filepath.Clean(os.Expand(src, expandList(ctx.ConfigFile.Config.Env)))
-	dst = filepath.Clean(os.Expand(dst, expandList(ctx.ConfigFile.Config.Env)))
+	src = filepath.Clean(os.Expand(src, ExpandList(ctx.ConfigFile.Config.Env)))
+	dst = filepath.Clean(os.Expand(dst, ExpandList(ctx.ConfigFile.Config.Env)))
 
 	// copy the directory
 	if err := files.CopyDirectory(src, dst, ctx.FS); err != nil {

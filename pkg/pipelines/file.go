@@ -43,7 +43,7 @@ func (s *File) Run(ctx *BuildContext) error {
 	}
 
 	// expand paths using environment variables
-	path = filepath.Clean(os.Expand(path, expandList(ctx.ConfigFile.Config.Env)))
+	path = filepath.Clean(os.Expand(path, ExpandList(ctx.ConfigFile.Config.Env)))
 	dst, err := os.MkdirTemp("", "file-*")
 	if err != nil {
 		log.Error(err, "failed to prepare download directory")
@@ -101,7 +101,7 @@ func (s *File) Run(ctx *BuildContext) error {
 	return nil
 }
 
-func expandList(vs []string) func(s string) string {
+func ExpandList(vs []string) func(s string) string {
 	return func(s string) string {
 		for _, e := range vs {
 			k, v, _ := strings.Cut(e, "=")

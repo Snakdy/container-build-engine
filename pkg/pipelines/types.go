@@ -31,4 +31,5 @@ const (
 	StatementSymbolicLink = "link"
 	StatementFile         = "file"
 	StatementEnv          = "env"
+	StatementDir          = "dir"
 )

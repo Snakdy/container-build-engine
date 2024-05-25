@@ -13,6 +13,8 @@ func Find(name string, options cbev1.Options) PipelineStatement {
 		s = &File{}
 	case StatementSymbolicLink:
 		s = &SymbolicLink{}
+	case StatementDir:
+		s = &Dir{}
 	default:
 		return nil
 	}

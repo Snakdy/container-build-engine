@@ -47,7 +47,8 @@ func toOCIV1ConfigFile(cf *v1.ConfigFile) *v1.ConfigFile {
 // https://github.com/opencontainers/image-spec/blob/main/config.md
 func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	log.V(3).Info("normalising base image")
+	log.V(2).Info("normalising base image - this may take a while")
+	log.V(3).Info("we do this to make sure that media type between layers is consistent")
 	// get the original manifest
 	m, err := base.Manifest()
 	if err != nil {
@@ -75,7 +76,11 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.V(4).Info("checking layer", "mediaType", mediaType)
+		layerHash, err := layer.Digest()
+		if err != nil {
+			return nil, err
+		}
+		log.V(4).Info("checking layer", "mediaType", mediaType, "digest", layerHash.String())
 		switch mediaType {
 		case types.DockerLayer:
 			layer, err = tarball.LayerFromOpener(layer.Compressed, tarball.WithMediaType(types.OCILayer))
@@ -91,6 +96,7 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 		newLayers = append(newLayers, layer)
 	}
 
+	log.V(4).Info("appending mutated layers to empty OCI image")
 	base, err = mutate.AppendLayers(empty.Image, newLayers...)
 	if err != nil {
 		return nil, err
@@ -103,5 +109,6 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.V(3).Info("successfully normalised base image")
 	return base, nil
 }

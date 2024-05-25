@@ -126,14 +126,6 @@ func (*File) Name() string {
 	return StatementFile
 }
 
-func (*File) MutatesConfig() bool {
-	return false
-}
-
-func (*File) MutatesFS() bool {
-	return true
-}
-
 func (s *File) SetOptions(options cbev1.Options) {
 	if s.options == nil {
 		s.options = map[string]any{}

@@ -17,8 +17,6 @@ type BuildContext struct {
 type PipelineStatement interface {
 	Run(ctx *BuildContext) error
 	Name() string
-	MutatesConfig() bool
-	MutatesFS() bool
 	SetOptions(options cbev1.Options)
 }
 

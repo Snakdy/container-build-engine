@@ -30,14 +30,6 @@ func (*Env) Name() string {
 	return StatementEnv
 }
 
-func (*Env) MutatesConfig() bool {
-	return true
-}
-
-func (*Env) MutatesFS() bool {
-	return false
-}
-
 func (s *Env) SetOptions(options cbev1.Options) {
 	if s.options == nil {
 		s.options = map[string]any{}

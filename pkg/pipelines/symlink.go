@@ -31,14 +31,6 @@ func (*SymbolicLink) Name() string {
 	return StatementSymbolicLink
 }
 
-func (*SymbolicLink) MutatesConfig() bool {
-	return false
-}
-
-func (*SymbolicLink) MutatesFS() bool {
-	return true
-}
-
 func (s *SymbolicLink) SetOptions(options cbev1.Options) {
 	if s.options == nil {
 		s.options = map[string]any{}

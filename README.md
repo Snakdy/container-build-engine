@@ -26,4 +26,6 @@ Usage documentation can be found in the [`docs`](docs) directory.
 CBE includes a reference implementation that builds a container from a YAML configuration file.
 While it's not exactly production-ready, there's nothing stopping you from using it.
 
+The bulk of it can be found in the [`cmd/build.go`](cmd/build.go) file.
+
 Example configuration files can be found in the [`fixtures/v1`](fixtures/v1) directory.

@@ -15,6 +15,8 @@ func Find(name string, options cbev1.Options) PipelineStatement {
 		s = &SymbolicLink{}
 	case StatementDir:
 		s = &Dir{}
+	case StatementScript:
+		s = &Script{}
 	default:
 		return nil
 	}

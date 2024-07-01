@@ -13,6 +13,9 @@ func TestGetAny(t *testing.T) {
 		{
 			"bar": "zoo",
 		},
+		{
+			"foo": "blah",
+		},
 	}
 	t.Run("not present", func(t *testing.T) {
 		_, err := GetAny[string](ol, "zoo")

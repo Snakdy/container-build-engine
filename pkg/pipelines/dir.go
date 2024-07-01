@@ -13,15 +13,17 @@ type Dir struct {
 	options cbev1.Options
 }
 
-func (s *Dir) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error) {
+func (s *Dir) Run(ctx *BuildContext, runtimeOptions ...cbev1.Options) (cbev1.Options, error) {
 	log := logr.FromContextOrDiscard(ctx.Context)
 	log.V(7).Info("running statement", "options", s.options)
 
-	src, err := cbev1.GetRequired[string](s.options, "src")
+	options := append(cbev1.OptionsList{s.options}, runtimeOptions...)
+
+	src, err := cbev1.GetAny[string](options, "src")
 	if err != nil {
 		return cbev1.Options{}, err
 	}
-	dst, err := cbev1.GetRequired[string](s.options, "dst")
+	dst, err := cbev1.GetAny[string](options, "dst")
 	if err != nil {
 		return cbev1.Options{}, err
 	}

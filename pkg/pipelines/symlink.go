@@ -11,7 +11,7 @@ type SymbolicLink struct {
 	options cbev1.Options
 }
 
-func (s *SymbolicLink) Run(ctx *BuildContext) error {
+func (s *SymbolicLink) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error) {
 	log := logr.FromContextOrDiscard(ctx.Context)
 
 	for k, v := range s.options {
@@ -21,10 +21,10 @@ func (s *SymbolicLink) Run(ctx *BuildContext) error {
 		log.V(5).Info("creating link", "src", srcPath, "dst", dstPath)
 		if err := ctx.FS.Symlink(srcPath, dstPath); err != nil {
 			log.Error(err, "failed to create link")
-			return err
+			return cbev1.Options{}, err
 		}
 	}
-	return nil
+	return cbev1.Options{}, nil
 }
 
 func (*SymbolicLink) Name() string {

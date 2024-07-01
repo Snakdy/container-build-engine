@@ -3,10 +3,12 @@ package builder
 import (
 	"context"
 	"fmt"
+	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 	"github.com/Snakdy/container-build-engine/pkg/containers"
 	"github.com/Snakdy/container-build-engine/pkg/envs"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/stategraph"
+	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/Snakdy/container-build-engine/pkg/useradd"
 	"github.com/chainguard-dev/go-apk/pkg/fs"
 	"github.com/go-logr/logr"
@@ -218,10 +220,13 @@ func (b *Builder) applyPlatform(ctx context.Context, cfg *v1.ConfigFile, platfor
 func (b *Builder) applyMutations(ctx *pipelines.BuildContext) error {
 	log := logr.FromContextOrDiscard(ctx.Context)
 	log.Info("applying mutation pipelines")
+	data := cbev1.Options{}
 	for _, pipeline := range b.statements {
-		if err := pipeline.Run(ctx); err != nil {
+		out, err := pipeline.Run(ctx, data)
+		if err != nil {
 			return fmt.Errorf("running pipeline: %w", err)
 		}
+		utils.CopyMap(out, data)
 	}
 	return nil
 }

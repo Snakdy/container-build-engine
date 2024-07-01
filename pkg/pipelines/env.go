@@ -15,7 +15,7 @@ type Env struct {
 	options cbev1.Options
 }
 
-func (s *Env) Run(ctx *BuildContext) error {
+func (s *Env) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error) {
 	log := logr.FromContextOrDiscard(ctx.Context)
 
 	for k, v := range s.options {
@@ -24,10 +24,10 @@ func (s *Env) Run(ctx *BuildContext) error {
 		ctx.ConfigFile.Config.Env = SetOrAppend(ctx.ConfigFile.Config.Env, k, value)
 		if err := os.Setenv(k, v.(string)); err != nil {
 			log.Error(err, "could not export environment variable for usage in later stages", "key", k, "value", v, "expandedValue", value)
-			return err
+			return cbev1.Options{}, err
 		}
 	}
-	return nil
+	return cbev1.Options{}, nil
 }
 
 func SetOrAppend(vars []string, k, v string) []string {

@@ -1,5 +1,7 @@
 package v1
 
+import "errors"
+
 type Pipeline struct {
 	Base       string      `json:"base"`
 	Statements []Statement `json:"statements"`
@@ -20,3 +22,10 @@ type Statement struct {
 }
 
 type Options map[string]any
+
+type OptionsList []Options
+
+var (
+	ErrNoValue   = errors.New("no value found for option")
+	ErrWrongType = errors.New("wrong type for option")
+)

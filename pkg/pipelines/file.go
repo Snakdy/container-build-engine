@@ -17,29 +17,29 @@ type File struct {
 	options cbev1.Options
 }
 
-func (s *File) Run(ctx *BuildContext) error {
+func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error) {
 	log := logr.FromContextOrDiscard(ctx.Context)
 	log.V(7).Info("running statement", "options", s.options)
 
 	path, err := cbev1.GetRequired[string](s.options, "path")
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 	fileUri, err := cbev1.GetRequired[string](s.options, "uri")
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 	executable, err := cbev1.GetOptional[bool](s.options, "executable")
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 	subPath, err := cbev1.GetOptional[string](s.options, "sub-path")
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 	checksum, err := cbev1.GetOptional[string](s.options, "checksum")
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 
 	// expand paths using environment variables
@@ -47,11 +47,11 @@ func (s *File) Run(ctx *BuildContext) error {
 	dst, err := os.MkdirTemp("", "file-*")
 	if err != nil {
 		log.Error(err, "failed to prepare download directory")
-		return err
+		return cbev1.Options{}, err
 	}
 	srcUri, err := url.Parse(envs.ExpandEnv(fileUri))
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 	if checksum != "" {
 		log.V(2).Info("validating checksum", "uri", fileUri, "checksum", checksum)
@@ -72,7 +72,7 @@ func (s *File) Run(ctx *BuildContext) error {
 	}
 	if err := client.Get(); err != nil {
 		log.Error(err, "failed to retrieve file", "src", srcUri.String())
-		return err
+		return cbev1.Options{}, err
 	}
 	var permissions os.FileMode = 0644
 	if executable {
@@ -89,16 +89,16 @@ func (s *File) Run(ctx *BuildContext) error {
 		log.V(6).Info("updating file permissions", "file", copySrc, "permissions", permissions)
 		if err := os.Chmod(copySrc, permissions); err != nil {
 			log.Error(err, "failed to update file permissions", "file", copySrc)
-			return err
+			return cbev1.Options{}, err
 		}
 	}
 	// todo update file permissions for file types that don't match the above
 	log.V(5).Info("copying file or directory", "src", copySrc, "dst", path)
 	if err := files.CopyDirectory(copySrc, path, ctx.FS); err != nil {
 		log.Error(err, "failed to copy directory")
-		return err
+		return cbev1.Options{}, err
 	}
-	return nil
+	return cbev1.Options{}, nil
 }
 
 func ExpandList(vs []string) func(s string) string {

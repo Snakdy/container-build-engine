@@ -5,6 +5,31 @@ import (
 	"testing"
 )
 
+func TestGetAny(t *testing.T) {
+	ol := OptionsList{
+		{
+			"foo": "bar",
+		},
+		{
+			"bar": "zoo",
+		},
+	}
+	t.Run("not present", func(t *testing.T) {
+		_, err := GetAny[string](ol, "zoo")
+		assert.ErrorIs(t, err, ErrNoValue)
+	})
+	t.Run("present but wrong type", func(t *testing.T) {
+		val, err := GetAny[bool](ol, "foo")
+		assert.ErrorIs(t, err, ErrWrongType)
+		assert.Empty(t, val)
+	})
+	t.Run("present", func(t *testing.T) {
+		val, err := GetAny[string](ol, "foo")
+		assert.NoError(t, err)
+		assert.EqualValues(t, "bar", val)
+	})
+}
+
 func TestGetRequired(t *testing.T) {
 	t.Run("not present", func(t *testing.T) {
 		o := Options{}

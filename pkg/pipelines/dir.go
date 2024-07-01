@@ -13,17 +13,17 @@ type Dir struct {
 	options cbev1.Options
 }
 
-func (s *Dir) Run(ctx *BuildContext) error {
+func (s *Dir) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error) {
 	log := logr.FromContextOrDiscard(ctx.Context)
 	log.V(7).Info("running statement", "options", s.options)
 
 	src, err := cbev1.GetRequired[string](s.options, "src")
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 	dst, err := cbev1.GetRequired[string](s.options, "dst")
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 
 	// expand paths
@@ -33,10 +33,10 @@ func (s *Dir) Run(ctx *BuildContext) error {
 	// copy the directory
 	if err := files.CopyDirectory(src, dst, ctx.FS); err != nil {
 		log.Error(err, "failed to copy directory")
-		return err
+		return cbev1.Options{}, err
 	}
 
-	return nil
+	return cbev1.Options{}, nil
 }
 
 func (*Dir) Name() string {

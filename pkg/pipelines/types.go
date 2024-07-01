@@ -15,7 +15,7 @@ type BuildContext struct {
 }
 
 type PipelineStatement interface {
-	Run(ctx *BuildContext) error
+	Run(ctx *BuildContext, runtimeOptions ...cbev1.Options) (cbev1.Options, error)
 	Name() string
 	SetOptions(options cbev1.Options)
 }

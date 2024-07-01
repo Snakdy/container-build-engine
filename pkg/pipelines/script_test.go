@@ -18,7 +18,7 @@ func TestScript_Run(t *testing.T) {
 		"command": "ls",
 		"args":    []string{"-la", "."},
 	}}
-	err := s.Run(&BuildContext{
+	_, err := s.Run(&BuildContext{
 		Context:          ctx,
 		WorkingDirectory: "",
 	})

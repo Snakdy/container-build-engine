@@ -13,17 +13,17 @@ type Script struct {
 	options cbev1.Options
 }
 
-func (s *Script) Run(ctx *BuildContext) error {
+func (s *Script) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error) {
 	log := logr.FromContextOrDiscard(ctx.Context)
 	log.V(7).Info("running statement", "options", s.options)
 
 	command, err := cbev1.GetRequired[string](s.options, "command")
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 	args, err := cbev1.GetRequired[[]string](s.options, "args")
 	if err != nil {
-		return err
+		return cbev1.Options{}, err
 	}
 
 	log.V(9).Info("running script statement", "command", command, "args", args)
@@ -35,12 +35,12 @@ func (s *Script) Run(ctx *BuildContext) error {
 	err = cmd.Run()
 	if err != nil {
 		log.Error(err, "script execution failed")
-		return err
+		return cbev1.Options{}, err
 	}
 
 	log.V(6).Info("script execution completed", "duration", time.Since(start))
 
-	return nil
+	return cbev1.Options{}, nil
 }
 
 func (*Script) Name() string {

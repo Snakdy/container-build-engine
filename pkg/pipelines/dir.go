@@ -9,6 +9,12 @@ import (
 	"path/filepath"
 )
 
+// Dir recursively copies a directory into the container.
+// Accepts the following parameters:
+//
+// 1. "src": where to retrieve the directory from
+//
+// 2. "dst": where to place the directory in the container
 type Dir struct {
 	options cbev1.Options
 }

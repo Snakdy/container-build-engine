@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+// Script executes an arbitrary script.
+// Accepts the following parameters:
+//
+// 1. "command": command to execute
+//
+// 2. "args": additional arguments to pass to the command.
 type Script struct {
 	options cbev1.Options
 }

@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+// Env exports one or more environment variables. Options should be a key-value map
+// where key is the name and the value is the value to set.
 type Env struct {
 	options cbev1.Options
 }

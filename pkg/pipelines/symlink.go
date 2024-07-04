@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 )
 
+// SymbolicLink creates one or more symbolic links. Options should be a key-value map
+// where key is the source and the value is the name of the link.
 type SymbolicLink struct {
 	options cbev1.Options
 }
@@ -20,7 +22,7 @@ func (s *SymbolicLink) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options
 
 		log.V(5).Info("creating link", "src", srcPath, "dst", dstPath)
 		if err := ctx.FS.Symlink(srcPath, dstPath); err != nil {
-			log.Error(err, "failed to create link")
+			log.Error(err, "failed to create link", "src", srcPath, "dst", dstPath)
 			return cbev1.Options{}, err
 		}
 	}

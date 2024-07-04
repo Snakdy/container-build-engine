@@ -13,6 +13,7 @@ type Builder struct {
 type Options struct {
 	WorkingDir      string
 	Username        string
+	Uid             int
 	Entrypoint      []string
 	Command         []string
 	ForceEntrypoint bool
@@ -30,6 +31,13 @@ func (o *Options) GetUsername() string {
 		return DefaultUsername
 	}
 	return o.Username
+}
+
+func (o *Options) GetUid() int {
+	if o.Uid <= 0 {
+		return DefaultUid
+	}
+	return o.Uid
 }
 
 func (o *MetadataOptions) GetCreatedBy() string {

@@ -22,6 +22,7 @@ import (
 )
 
 const DefaultUsername = "somebody"
+const DefaultUid = 1001
 
 func NewBuilder(ctx context.Context, baseRef string, statements []pipelines.OrderedPipelineStatement, options Options) (*Builder, error) {
 	log := logr.FromContextOrDiscard(ctx)
@@ -100,7 +101,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 
 	// create the non-root user directory
 	buildContext.ConfigFile.Config.Env = pipelines.SetOrAppend(buildContext.ConfigFile.Config.Env, "HOME", filepath.Join("/home", b.options.GetUsername()))
-	if err := useradd.NewUserDir(ctx, buildContext.FS, b.options.GetUsername(), 1001); err != nil {
+	if err := useradd.NewUserDir(ctx, buildContext.FS, b.options.GetUsername(), b.options.GetUid()); err != nil {
 		return nil, err
 	}
 
@@ -110,11 +111,11 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	}
 
 	// create the non-root user
-	if err := useradd.NewUser(ctx, buildContext.FS, b.options.GetUsername(), 1001); err != nil {
+	if err := useradd.NewUser(ctx, buildContext.FS, b.options.GetUsername(), b.options.GetUid()); err != nil {
 		return nil, err
 	}
 
-	layer, err := containers.NewLayer(ctx, buildContext.FS, b.options.GetUsername(), platform)
+	layer, err := containers.NewLayer(ctx, buildContext.FS, b.options.GetUsername(), b.options.GetUid(), platform)
 	if err != nil {
 		return nil, fmt.Errorf("creating layer: %w", err)
 	}

@@ -13,6 +13,18 @@ import (
 	"strings"
 )
 
+// File downloads or adds a file.
+// Accepts the following parameters:
+//
+// 1. "path": where to place the file in the container
+//
+// 2. "uri": go-getter style URI indicating where to get the file from
+//
+// 3. "executable": make the file executable
+//
+// 4. "sub-path": if the file is an archive, extract a file from it
+//
+// 5. "checksum": hash of the file for checksum validation
 type File struct {
 	options cbev1.Options
 }

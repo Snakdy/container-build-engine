@@ -2,6 +2,7 @@ package pipelines
 
 import (
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
+	"github.com/Snakdy/container-build-engine/pkg/envs"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
 	"path/filepath"
@@ -17,8 +18,8 @@ func (s *SymbolicLink) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options
 	log := logr.FromContextOrDiscard(ctx.Context)
 
 	for k, v := range s.options {
-		srcPath := filepath.Clean(k)
-		dstPath := filepath.Clean(v.(string))
+		srcPath := filepath.Clean(envs.ExpandEnvFunc(k, ExpandList(ctx.ConfigFile.Config.Env)))
+		dstPath := filepath.Clean(envs.ExpandEnvFunc(v.(string), ExpandList(ctx.ConfigFile.Config.Env)))
 
 		log.V(5).Info("creating link", "src", srcPath, "dst", dstPath)
 		if err := ctx.FS.Symlink(srcPath, dstPath); err != nil {

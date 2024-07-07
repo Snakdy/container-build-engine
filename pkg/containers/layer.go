@@ -3,10 +3,10 @@ package containers
 import (
 	"archive/tar"
 	"bytes"
+	fullfs "chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	"fmt"
 	"github.com/Snakdy/container-build-engine/pkg/files"
-	fullfs "github.com/chainguard-dev/go-apk/pkg/fs"
 	"github.com/go-logr/logr"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"

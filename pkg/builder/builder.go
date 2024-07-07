@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	"fmt"
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
@@ -10,7 +11,6 @@ import (
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/stategraph"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/Snakdy/container-build-engine/pkg/useradd"
-	"github.com/chainguard-dev/go-apk/pkg/fs"
 	"github.com/go-logr/logr"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"

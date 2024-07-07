@@ -1,7 +1,7 @@
 package files
 
 import (
-	fullfs "github.com/chainguard-dev/go-apk/pkg/fs"
+	fullfs "chainguard.dev/apko/pkg/apk/fs"
 )
 
 func IsSymbolicLink(rootfs fullfs.FullFS, path string) (bool, error) {

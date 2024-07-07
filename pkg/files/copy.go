@@ -1,8 +1,8 @@
 package files
 
 import (
+	"chainguard.dev/apko/pkg/apk/fs"
 	"fmt"
-	"github.com/chainguard-dev/go-apk/pkg/fs"
 	"io"
 	"os"
 	"path/filepath"

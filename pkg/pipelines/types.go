@@ -1,9 +1,9 @@
 package pipelines
 
 import (
+	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
-	"github.com/chainguard-dev/go-apk/pkg/fs"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 

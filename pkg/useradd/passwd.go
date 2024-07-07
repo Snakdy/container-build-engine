@@ -1,9 +1,9 @@
 package useradd
 
 import (
+	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	"fmt"
-	"github.com/chainguard-dev/go-apk/pkg/fs"
 	"github.com/go-logr/logr"
 	"path/filepath"
 )

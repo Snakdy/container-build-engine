@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
 	"github.com/go-logr/logr"
@@ -49,7 +50,7 @@ func TestNewBuilderFromStatements(t *testing.T) {
 			Statement: &pipelines.File{},
 			DependsOn: nil,
 		},
-	}, Options{WorkingDir: wd})
+	}, Options{WorkingDir: wd, FS: fs.NewMemFS()})
 	assert.NoError(t, err)
 	assert.NotNil(t, builder)
 

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	"fmt"
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
@@ -135,5 +136,6 @@ func newBuilder(ctx context.Context, pipeline cbev1.Pipeline, statementFinder pi
 		Entrypoint:      pipeline.Config.Entrypoint,
 		Command:         pipeline.Config.Command,
 		ForceEntrypoint: pipeline.Config.OverwriteEntrypoint,
+		FS:              fs.NewMemFS(),
 	})
 }

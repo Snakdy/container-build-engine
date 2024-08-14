@@ -46,8 +46,9 @@ package main
 import "github.com/Snakdy/container-build-engine/pkg/builder"
 
 func main() {
+	fs, _ := builder.NewDirFS()
 	builder.NewBuilder(ctx, "my-base-image", statements, builder.Options{
-		DirFS: true,
+		FS: fs,
 	})
 }
 ```

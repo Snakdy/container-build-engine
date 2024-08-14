@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"chainguard.dev/apko/pkg/apk/fs"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
 )
 
@@ -18,7 +19,7 @@ type Options struct {
 	Command         []string
 	ForceEntrypoint bool
 	Metadata        MetadataOptions
-	DirFS           bool
+	FS              fs.FullFS
 }
 
 type MetadataOptions struct {

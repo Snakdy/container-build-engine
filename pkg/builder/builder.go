@@ -15,7 +15,6 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/types"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -78,16 +77,8 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	}
 	cfg = cfg.DeepCopy()
 
-	var filesystem fs.FullFS
-
-	if b.options.DirFS {
-		tmpFs, err := os.MkdirTemp("", "container-build-engine-fs-*")
-		if err != nil {
-			return nil, fmt.Errorf("creating temporary directory: %w", err)
-		}
-		log.V(3).Info("creating tempfs virtual filesystem", "path", tmpFs)
-		filesystem = fs.DirFS(tmpFs)
-	} else {
+	filesystem := b.options.FS
+	if filesystem == nil {
 		filesystem = fs.NewMemFS()
 		log.V(3).Info("creating in-memory virtual filesystem - this may cause memory issues with large builds")
 	}
@@ -95,7 +86,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	buildContext := &pipelines.BuildContext{
 		Context:          ctx,
 		WorkingDirectory: b.options.WorkingDir,
-		FS:               filesystem,
+		FS:               b.options.FS,
 		ConfigFile:       cfg,
 	}
 

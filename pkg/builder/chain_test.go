@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
 	"github.com/go-logr/logr"
@@ -34,7 +35,7 @@ func TestDataChaining(t *testing.T) {
 			Statement: &FakeDst{},
 			DependsOn: []string{"generate-fake-data"},
 		},
-	}, Options{WorkingDir: wd})
+	}, Options{WorkingDir: wd, FS: fs.NewMemFS()})
 	assert.NoError(t, err)
 	assert.NotNil(t, builder)
 

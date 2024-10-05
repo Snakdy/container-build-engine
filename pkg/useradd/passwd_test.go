@@ -20,6 +20,9 @@ var expected string
 //go:embed testdata/single
 var expectedEmpty string
 
+//go:embed testdata/single-shell
+var expectedShell string
+
 func TestNewUser(t *testing.T) {
 	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))
 
@@ -41,7 +44,7 @@ func TestNewUser(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		rootfs := fs.NewMemFS()
 
-		err := NewUser(ctx, rootfs, "somebody", 1001)
+		err := NewUser(ctx, rootfs, "somebody", "", 1001)
 		assert.NoError(t, err)
 
 		data, err := rootfs.ReadFile(filepath.Join("/etc", "passwd"))
@@ -52,7 +55,7 @@ func TestNewUser(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		rootfs := setup("./testdata/normal")
 
-		err := NewUser(ctx, rootfs, "somebody", 1001)
+		err := NewUser(ctx, rootfs, "somebody", "", 1001)
 		assert.NoError(t, err)
 
 		data, err := rootfs.ReadFile(filepath.Join("/etc", "passwd"))
@@ -60,10 +63,21 @@ func TestNewUser(t *testing.T) {
 		assert.EqualValues(t, expectedEmpty, string(data))
 	})
 
+	t.Run("custom shell", func(t *testing.T) {
+		rootfs := setup("./testdata/normal")
+
+		err := NewUser(ctx, rootfs, "somebody", "/bin/bash", 1001)
+		assert.NoError(t, err)
+
+		data, err := rootfs.ReadFile(filepath.Join("/etc", "passwd"))
+		require.NoError(t, err)
+		assert.EqualValues(t, expectedShell, string(data))
+	})
+
 	t.Run("existing", func(t *testing.T) {
 		rootfs := setup("./testdata/existing")
 
-		err := NewUser(ctx, rootfs, "somebody", 1001)
+		err := NewUser(ctx, rootfs, "somebody", "", 1001)
 		assert.NoError(t, err)
 
 		data, err := rootfs.ReadFile(filepath.Join("/etc", "passwd"))

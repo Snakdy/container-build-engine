@@ -12,9 +12,17 @@ type Builder struct {
 }
 
 type Options struct {
-	WorkingDir      string
-	Username        string
-	Uid             int
+	WorkingDir string
+	// Username is the name of the Linux user
+	// that the container will run as.
+	Username string
+	// Uid is the numerical ID of the Linux user
+	// that the container will run as.
+	Uid int
+	// Shell is the default shell that will be opened
+	// whenever a user connects. If not provided
+	// it will default to /bin/sh
+	Shell           string
 	Entrypoint      []string
 	Command         []string
 	ForceEntrypoint bool
@@ -27,6 +35,8 @@ type MetadataOptions struct {
 	CreatedBy string
 }
 
+// GetUsername returns the nominated username or the
+// DefaultUsername
 func (o *Options) GetUsername() string {
 	if o.Username == "" {
 		return DefaultUsername
@@ -34,6 +44,7 @@ func (o *Options) GetUsername() string {
 	return o.Username
 }
 
+// GetUid returns the nominated uid or the DefaultUid
 func (o *Options) GetUid() int {
 	if o.Uid <= 0 {
 		return DefaultUid

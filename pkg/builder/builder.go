@@ -102,7 +102,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	}
 
 	// create the non-root user
-	if err := useradd.NewUser(ctx, buildContext.FS, b.options.GetUsername(), b.options.GetUid()); err != nil {
+	if err := useradd.NewUser(ctx, buildContext.FS, b.options.GetUsername(), b.options.Shell, b.options.GetUid()); err != nil {
 		return nil, err
 	}
 

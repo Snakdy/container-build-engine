@@ -33,7 +33,7 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 	log := logr.FromContextOrDiscard(ctx.Context)
 	log.V(7).Info("running statement", "options", s.options)
 
-	path, err := cbev1.GetRequired[string](s.options, "path")
+	rawPath, err := cbev1.GetRequired[string](s.options, "path")
 	if err != nil {
 		return cbev1.Options{}, err
 	}
@@ -55,7 +55,7 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 	}
 
 	// expand paths using environment variables
-	path = filepath.Clean(envs.ExpandEnvFunc(path, ExpandList(ctx.ConfigFile.Config.Env)))
+	path := filepath.Clean(envs.ExpandEnvFunc(rawPath, ExpandList(ctx.ConfigFile.Config.Env)))
 	dst, err := os.MkdirTemp("", "file-*")
 	if err != nil {
 		log.Error(err, "failed to prepare download directory")
@@ -104,9 +104,15 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 			return cbev1.Options{}, err
 		}
 	}
+
+	// handle short-form destination paths
+	if strings.HasSuffix(rawPath, "/") {
+		path = filepath.Join(path, filepath.Base(copySrc))
+	}
+
 	// todo update file permissions for file types that don't match the above
 	log.V(5).Info("copying file or directory", "src", copySrc, "dst", path)
-	if err := files.CopyDirectory(copySrc, path, ctx.FS); err != nil {
+	if err := files.CopyDirectory(ctx.Context, copySrc, path, ctx.FS); err != nil {
 		log.Error(err, "failed to copy directory")
 		return cbev1.Options{}, err
 	}

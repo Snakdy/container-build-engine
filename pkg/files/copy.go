@@ -2,20 +2,25 @@ package files
 
 import (
 	"chainguard.dev/apko/pkg/apk/fs"
+	"context"
 	"fmt"
+	"github.com/go-logr/logr"
 	"io"
 	"os"
 	"path/filepath"
 )
 
-func CopyDirectory(srcDir, dest string, destFS fs.FullFS) error {
+func CopyDirectory(ctx context.Context, srcDir, dest string, destFS fs.FullFS) error {
+	log := logr.FromContextOrDiscard(ctx).WithValues("src", srcDir, "dst", dest)
+	log.V(6).Info("copying directory")
 	info, err := os.Stat(srcDir)
 	if err != nil {
 		return err
 	}
 	// check if the directory is actually a directory
 	if !info.IsDir() {
-		return Copy(srcDir, dest, destFS)
+		log.V(6).Info("directory is actually a file")
+		return Copy(ctx, srcDir, dest, destFS)
 	}
 	entries, err := os.ReadDir(srcDir)
 	if err != nil {
@@ -35,7 +40,7 @@ func CopyDirectory(srcDir, dest string, destFS fs.FullFS) error {
 			if err := CreateIfNotExists(destFS, destPath, 0755); err != nil {
 				return err
 			}
-			if err := CopyDirectory(sourcePath, destPath, destFS); err != nil {
+			if err := CopyDirectory(ctx, sourcePath, destPath, destFS); err != nil {
 				return err
 			}
 		case os.ModeSymlink:
@@ -43,7 +48,7 @@ func CopyDirectory(srcDir, dest string, destFS fs.FullFS) error {
 				return err
 			}
 		default:
-			if err := Copy(sourcePath, destPath, destFS); err != nil {
+			if err := Copy(ctx, sourcePath, destPath, destFS); err != nil {
 				return err
 			}
 		}
@@ -63,7 +68,9 @@ func CopyDirectory(srcDir, dest string, destFS fs.FullFS) error {
 	return nil
 }
 
-func Copy(srcFile, dstFile string, dstFS fs.FullFS) error {
+func Copy(ctx context.Context, srcFile, dstFile string, dstFS fs.FullFS) error {
+	log := logr.FromContextOrDiscard(ctx).WithValues("src", srcFile, "dst", dstFile)
+	log.V(6).Info("copying file")
 	if err := CreateIfNotExists(dstFS, filepath.Dir(dstFile), 0755); err != nil {
 		return err
 	}

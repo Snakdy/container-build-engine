@@ -190,8 +190,6 @@ func (b *Builder) applyPlatform(ctx context.Context, cfg *v1.ConfigFile, platfor
 	if cfg.Config.Labels == nil {
 		cfg.Config.Labels = map[string]string{}
 	}
-	// todo support base image annotation hints
-	// https://github.com/google/go-containerregistry/blob/main/cmd/crane/rebase.md#base-image-annotation-hints
 
 	if b.options.Entrypoint != nil || b.options.ForceEntrypoint {
 		for i := range b.options.Entrypoint {

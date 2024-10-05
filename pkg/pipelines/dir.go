@@ -39,7 +39,7 @@ func (s *Dir) Run(ctx *BuildContext, runtimeOptions ...cbev1.Options) (cbev1.Opt
 	dst = filepath.Clean(envs.ExpandEnvFunc(dst, ExpandList(ctx.ConfigFile.Config.Env)))
 
 	// copy the directory
-	if err := files.CopyDirectory(src, dst, ctx.FS); err != nil {
+	if err := files.CopyDirectory(ctx.Context, src, dst, ctx.FS); err != nil {
 		log.Error(err, "failed to copy directory")
 		return cbev1.Options{}, err
 	}

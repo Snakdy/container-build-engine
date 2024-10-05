@@ -7,6 +7,7 @@ import (
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
 	"path/filepath"
+	"strings"
 )
 
 // Dir recursively copies a directory into the container.
@@ -29,14 +30,19 @@ func (s *Dir) Run(ctx *BuildContext, runtimeOptions ...cbev1.Options) (cbev1.Opt
 	if err != nil {
 		return cbev1.Options{}, err
 	}
-	dst, err := cbev1.GetAny[string](options, "dst")
+	rawDst, err := cbev1.GetAny[string](options, "dst")
 	if err != nil {
 		return cbev1.Options{}, err
 	}
 
 	// expand paths
 	src = filepath.Clean(envs.ExpandEnvFunc(src, ExpandList(ctx.ConfigFile.Config.Env)))
-	dst = filepath.Clean(envs.ExpandEnvFunc(dst, ExpandList(ctx.ConfigFile.Config.Env)))
+	dst := filepath.Clean(envs.ExpandEnvFunc(rawDst, ExpandList(ctx.ConfigFile.Config.Env)))
+
+	// handle short-form destination paths
+	if strings.HasSuffix(rawDst, "/") {
+		dst = filepath.Join(dst, filepath.Base(src))
+	}
 
 	// copy the directory
 	if err := files.CopyDirectory(ctx.Context, src, dst, ctx.FS); err != nil {

@@ -40,7 +40,7 @@ func (s *Script) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, erro
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		log.Error(err, "script execution failed")
+		log.Error(err, "script execution failed", "command", command)
 		return cbev1.Options{}, err
 	}
 

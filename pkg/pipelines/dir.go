@@ -46,7 +46,7 @@ func (s *Dir) Run(ctx *BuildContext, runtimeOptions ...cbev1.Options) (cbev1.Opt
 
 	// copy the directory
 	if err := files.CopyDirectory(ctx.Context, src, dst, ctx.FS); err != nil {
-		log.Error(err, "failed to copy directory")
+		log.Error(err, "failed to copy directory", "src", src, "dst", dst)
 		return cbev1.Options{}, err
 	}
 

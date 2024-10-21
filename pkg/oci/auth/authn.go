@@ -29,7 +29,7 @@ func NewBasicKeychain(auth Auth) *BasicKeychain {
 
 func (b *BasicKeychain) Resolve(resource authn.Resource) (authn.Authenticator, error) {
 	if resource.RegistryStr() != b.auth.Registry {
-		log.Printf("registry does not match (expected: '%s', actual: '%s')", b.auth.Registry, resource.RegistryStr())
+		log.Printf("skipping authentication as registry does not match (expected: '%s', actual: '%s') - this is not an error and can safely be ignored", b.auth.Registry, resource.RegistryStr())
 		return authn.Anonymous, nil
 	}
 	return &authn.Basic{
@@ -39,6 +39,7 @@ func (b *BasicKeychain) Resolve(resource authn.Resource) (authn.Authenticator, e
 }
 
 func KeyChain(auth Auth) authn.Keychain {
+	log.Printf("retrieving default cloud keychain helpers - if you see an error about ECR and you are not pushing to ECR you can ignore it")
 	keychains := []authn.Keychain{
 		authn.DefaultKeychain,
 		google.Keychain,

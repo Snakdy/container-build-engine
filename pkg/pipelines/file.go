@@ -83,7 +83,7 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 		Getters:         getters,
 	}
 	if err := client.Get(); err != nil {
-		log.Error(err, "failed to retrieve file", "src", srcUri.String())
+		log.Error(err, "failed to retrieve file", "src", srcUri.String(), "dst", dst)
 		return cbev1.Options{}, err
 	}
 	var permissions os.FileMode = 0644
@@ -113,7 +113,7 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 	// todo update file permissions for file types that don't match the above
 	log.V(5).Info("copying file or directory", "src", copySrc, "dst", path)
 	if err := files.CopyDirectory(ctx.Context, copySrc, path, ctx.FS); err != nil {
-		log.Error(err, "failed to copy directory")
+		log.Error(err, "failed to copy directory", "src", copySrc, "dst", path)
 		return cbev1.Options{}, err
 	}
 	return cbev1.Options{}, nil

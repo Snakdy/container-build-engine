@@ -1,1 +1,2 @@
 somebody:x:1001:0:Linux User,,,:/home/somebody:/bin/sh
+root:x:0:0:root:/root:/bin/sh

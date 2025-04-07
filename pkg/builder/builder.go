@@ -95,6 +95,9 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	if err := useradd.NewUserDir(ctx, buildContext.FS, b.options.GetUsername(), b.options.GetUid()); err != nil {
 		return nil, err
 	}
+	if err := useradd.NewUserDir(ctx, buildContext.FS, "root", 0); err != nil {
+		return nil, err
+	}
 
 	// run the filesystem mutations
 	if err := b.applyMutations(buildContext); err != nil {

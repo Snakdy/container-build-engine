@@ -86,7 +86,7 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	buildContext := &pipelines.BuildContext{
 		Context:          ctx,
 		WorkingDirectory: b.options.WorkingDir,
-		FS:               b.options.FS,
+		FS:               filesystem,
 		ConfigFile:       cfg,
 	}
 

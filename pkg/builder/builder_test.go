@@ -13,6 +13,25 @@ import (
 	"testing"
 )
 
+func TestBuilder_Build(t *testing.T) {
+	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	platform, err := v1.ParsePlatform("linux/amd64")
+	require.NoError(t, err)
+
+	builder, err := NewBuilder(ctx, "ghcr.io/djcass44/nib/srv:v1.5.0", nil, Options{
+		WorkingDir: wd,
+	})
+	require.NoError(t, err)
+
+	img, err := builder.Build(ctx, platform)
+	assert.NoError(t, err)
+	assert.NotNil(t, img)
+}
+
 func TestNewBuilderFromStatements(t *testing.T) {
 	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))
 

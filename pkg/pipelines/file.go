@@ -6,7 +6,7 @@ import (
 	"github.com/Snakdy/container-build-engine/pkg/files"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
-	"github.com/hashicorp/go-getter"
+	"github.com/hashicorp/go-getter/v2"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -73,16 +73,19 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 	}
 
 	log.V(2).Info("retrieving file", "file", srcUri.String(), "path", dst)
-	client := &getter.Client{
-		Ctx:             ctx.Context,
+	client := getter.Client{
+		Getters:         getters,
+		DisableSymlinks: false,
+	}
+	req := &getter.Request{
 		Pwd:             ctx.WorkingDirectory,
 		Src:             srcUri.String(),
 		Dst:             dst,
 		DisableSymlinks: true,
-		Mode:            getter.ClientModeAny,
-		Getters:         getters,
+		GetMode:         getter.ModeAny,
+		Copy:            true,
 	}
-	if err := client.Get(); err != nil {
+	if _, err := client.Get(ctx.Context, req); err != nil {
 		log.Error(err, "failed to retrieve file", "src", srcUri.String(), "dst", dst)
 		return cbev1.Options{}, err
 	}
@@ -131,13 +134,11 @@ func ExpandList(vs []string) func(s string) string {
 	}
 }
 
-var getters = map[string]getter.Getter{
-	"file":  &getter.FileGetter{Copy: true},
-	"https": &getter.HttpGetter{XTerraformGetDisabled: true, Netrc: true},
-	"s3":    &getter.S3Getter{},
-	"git":   &getter.GitGetter{},
-	"gcs":   &getter.GCSGetter{},
-	"hg":    &getter.HgGetter{},
+var getters = []getter.Getter{
+	&getter.FileGetter{},
+	&getter.HttpGetter{XTerraformGetDisabled: true, Netrc: true},
+	&getter.GitGetter{},
+	&getter.HgGetter{},
 }
 
 func (*File) Name() string {

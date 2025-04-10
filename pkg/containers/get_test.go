@@ -16,7 +16,7 @@ import (
 func TestGet(t *testing.T) {
 	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))
 
-	require.NoError(t, os.Setenv("TMPDIR", t.TempDir()))
+	require.NoError(t, os.Setenv("XDG_CACHE_HOME", t.TempDir()))
 
 	t.Run("real image", func(t *testing.T) {
 		init := time.Now()

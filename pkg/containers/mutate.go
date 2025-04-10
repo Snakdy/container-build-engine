@@ -10,7 +10,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/google/go-containerregistry/pkg/v1/types"
-	"os"
 )
 
 // Drops docker specific properties
@@ -48,7 +47,7 @@ func toOCIV1ConfigFile(cf *v1.ConfigFile) *v1.ConfigFile {
 // https://github.com/opencontainers/image-spec/blob/main/config.md
 func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	log.V(2).Info("normalising base image - this may take a while")
+	log.V(2).Info("normalising base image - this may take a while if its the first time")
 	log.V(3).Info("we do this to make sure that media type between layers is consistent")
 	// get the original manifest
 	m, err := base.Manifest()
@@ -70,7 +69,7 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 	//goland:noinspection GoPreferNilSlice
 	newLayers := []v1.Layer{}
 
-	c := cache.NewFilesystemCache(os.TempDir())
+	c := cache.NewFilesystemCache(cache.Dir())
 
 	// go through each layer and convert it to
 	// OCI format
@@ -79,18 +78,17 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 		if err != nil {
 			return nil, fmt.Errorf("getting diff id: %w", err)
 		}
+		// check if we have a cached layer
 		if l, err := c.Get(diffId); err == nil {
-			layer = l
+			log.V(4).Info("skipping layer normalisation as we have a cached copy", "diffId", diffId)
+			newLayers = append(newLayers, l)
+			continue
 		}
 		mediaType, err := layer.MediaType()
 		if err != nil {
 			return nil, fmt.Errorf("getting media type: %w", err)
 		}
-		layerHash, err := layer.Digest()
-		if err != nil {
-			return nil, fmt.Errorf("getting layer digest: %w", err)
-		}
-		log.V(4).Info("checking layer", "mediaType", mediaType, "digest", layerHash.String())
+		log.V(4).Info("checking layer", "mediaType", mediaType, "diffId", diffId)
 		switch mediaType {
 		case types.DockerLayer:
 			layer, err = tarball.LayerFromOpener(layer.Compressed, tarball.WithMediaType(types.OCILayer))

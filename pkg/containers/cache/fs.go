@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 // fscache is a modification of the Crane cache
@@ -77,4 +78,24 @@ func (fs *fscache) Delete(hash v1.Hash) error {
 		return err
 	}
 	return nil
+}
+
+const layerDir = "cbe"
+
+// Dir attempts to find a directory that we can store the
+// cached layers in.
+// It will try the XDG_CACHE_HOME first, followed by ~/.cache
+// and finally TMPDIR or /tmp
+func Dir() string {
+	cacheHome := os.Getenv("XDG_CACHE_HOME")
+	if cacheHome == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			home = os.TempDir()
+		}
+		cacheHome = filepath.Join(home, ".cache")
+	}
+	cacheHome = filepath.Join(cacheHome, layerDir)
+	_ = os.MkdirAll(cacheHome, 0750)
+	return cacheHome
 }

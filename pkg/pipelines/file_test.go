@@ -128,6 +128,24 @@ func TestFile_Run(t *testing.T) {
 			"cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab",
 			"/tmp/hello",
 		},
+		{
+			"remote file with checksum",
+			"https://ftp.gnu.org/gnu/hello/hello-2.12.tar.gz?checksum=cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab&archive=false",
+			"/tmp/",
+			"",
+			false,
+			"",
+			"/tmp/hello-2.12.tar.gz",
+		},
+		{
+			"remote archive unpacked",
+			"https://ftp.gnu.org/gnu/hello/hello-2.12.tar.gz?checksum=cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab",
+			"/tmp/",
+			"",
+			false,
+			"",
+			"/tmp/hello-2.12/README",
+		},
 	}
 
 	for _, tt := range cases {

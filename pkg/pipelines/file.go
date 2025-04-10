@@ -90,7 +90,7 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 	}
 
 	// handle short-form destination paths
-	if strings.HasSuffix(rawPath, "/") {
+	if strings.HasSuffix(rawPath, "/") && !dir {
 		path = filepath.Join(path, filepath.Base(copySrc))
 	}
 

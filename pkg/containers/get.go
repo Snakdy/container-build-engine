@@ -19,6 +19,7 @@ func Get(ctx context.Context, ref string) (v1.Image, error) {
 	log.Info("getting image")
 
 	if ref == MagicImageScratch {
+		log.V(7).Info("image requested is a scratch image so we don't need to do anything")
 		return empty.Image, nil
 	}
 

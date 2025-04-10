@@ -3,13 +3,14 @@ package containers
 import (
 	"context"
 	"fmt"
+	"github.com/Snakdy/container-build-engine/pkg/containers/cache"
 	"github.com/Snakdy/container-build-engine/pkg/oci/empty"
-
 	"github.com/go-logr/logr"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/google/go-containerregistry/pkg/v1/types"
+	"os"
 )
 
 // Drops docker specific properties
@@ -69,16 +70,25 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 	//goland:noinspection GoPreferNilSlice
 	newLayers := []v1.Layer{}
 
+	c := cache.NewFilesystemCache(os.TempDir())
+
 	// go through each layer and convert it to
 	// OCI format
 	for _, layer := range layers {
+		diffId, err := layer.DiffID()
+		if err != nil {
+			return nil, fmt.Errorf("getting diff id: %w", err)
+		}
+		if l, err := c.Get(diffId); err == nil {
+			layer = l
+		}
 		mediaType, err := layer.MediaType()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("getting media type: %w", err)
 		}
 		layerHash, err := layer.Digest()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("getting layer digest: %w", err)
 		}
 		log.V(4).Info("checking layer", "mediaType", mediaType, "digest", layerHash.String())
 		switch mediaType {
@@ -87,10 +97,16 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 			if err != nil {
 				return nil, fmt.Errorf("building layer: %w", err)
 			}
+			if l, err := c.Put(diffId, layer, true); err == nil {
+				layer = l
+			}
 		case types.DockerUncompressedLayer:
 			layer, err = tarball.LayerFromOpener(layer.Uncompressed, tarball.WithMediaType(types.OCIUncompressedLayer))
 			if err != nil {
 				return nil, fmt.Errorf("building layer: %w", err)
+			}
+			if l, err := c.Put(diffId, layer, false); err == nil {
+				layer = l
 			}
 		}
 		newLayers = append(newLayers, layer)

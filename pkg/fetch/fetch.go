@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func Fetch(ctx context.Context, src, dst, checksum string) (string, error) {
@@ -77,6 +78,7 @@ func Fetch(ctx context.Context, src, dst, checksum string) (string, error) {
 func checksumFile(src, checksum string) error {
 	// if the file is actually a directory then get a
 	// checksum of the whole dir
+	checksum = strings.TrimPrefix(checksum, "sha256:")
 	if info, err := os.Stat(src); err == nil && info.IsDir() {
 		return checksumDir(src, checksum)
 	}
@@ -97,6 +99,7 @@ func checksumFile(src, checksum string) error {
 }
 
 func checksumDir(src, checksum string) error {
+	checksum = strings.TrimPrefix(checksum, "sha256:")
 	digest, err := hashdir.Make(src, "sha256")
 	if err != nil {
 		return fmt.Errorf("hashing file: %w", err)

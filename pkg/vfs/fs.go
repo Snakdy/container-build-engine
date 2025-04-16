@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -139,6 +140,15 @@ func (V *VFS) RemoveXattr(path string, attr string) error {
 }
 
 func (V *VFS) ListXattrs(path string) (map[string][]byte, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (V *VFS) Chtimes(path string, atime time.Time, mtime time.Time) error {
+	return os.Chtimes(V.Path(path), atime, mtime)
+}
+
+func (V *VFS) Sub(path string) (apkfs.FullFS, error) {
 	//TODO implement me
 	panic("implement me")
 }

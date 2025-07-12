@@ -51,7 +51,7 @@ func Fetch(ctx context.Context, src, dst, checksum string) (string, error) {
 
 	dontArchive := uri.Query().Get("archive") == "false"
 	if dontArchive {
-		log.V(3).Info("skipping unarchival process")
+		log.V(3).Info("skipping un-archival process")
 		out, err = fileutils.Copy(ctx, out, dst)
 		if err != nil {
 			return "", err
@@ -76,7 +76,7 @@ func Fetch(ctx context.Context, src, dst, checksum string) (string, error) {
 // checksumFile verifies the checksum of a file or
 // directory.
 func checksumFile(src, checksum string) error {
-	// if the file is actually a directory then get a
+	// if the file is actually a directory, then get a
 	// checksum of the whole dir
 	checksum = strings.TrimPrefix(checksum, "sha256:")
 	if info, err := os.Stat(src); err == nil && info.IsDir() {

@@ -3,9 +3,9 @@ package fetch
 import (
 	"context"
 	"net/url"
-	"strings"
+	"path/filepath"
 )
 
 func File(_ context.Context, src *url.URL) (string, error) {
-	return strings.TrimPrefix(src.String(), "file://"), nil
+	return filepath.Join(src.Hostname(), src.Path), nil
 }

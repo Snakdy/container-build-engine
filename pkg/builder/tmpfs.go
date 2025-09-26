@@ -1,15 +1,17 @@
 package builder
 
 import (
-	"chainguard.dev/apko/pkg/apk/fs"
+	"context"
 	"os"
+
+	"chainguard.dev/apko/pkg/apk/fs"
 )
 
 // NewDirFS is a utility function to create a filesystem in a temporary directory
-func NewDirFS() (fs.FullFS, error) {
+func NewDirFS(ctx context.Context) (fs.FullFS, error) {
 	tmpFs, err := os.MkdirTemp("", "container-build-engine-fs-*")
 	if err != nil {
 		return nil, err
 	}
-	return fs.DirFS(tmpFs), nil
+	return fs.DirFS(ctx, tmpFs), nil
 }

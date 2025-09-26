@@ -1,15 +1,16 @@
 package pipelines
 
 import (
-	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
+	"os"
+	"testing"
+
+	"chainguard.dev/apko/pkg/apk/fs"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 // interface guard
@@ -37,6 +38,15 @@ func TestFile_Run(t *testing.T) {
 			false,
 			"",
 			"/tmp/cacerts.crt",
+		},
+		{
+			"local file into dir",
+			"testdata/text.txt",
+			"/tmp/",
+			"",
+			false,
+			"",
+			"/tmp/text.txt",
 		},
 		{
 			"local file with extension, long form",
@@ -121,30 +131,30 @@ func TestFile_Run(t *testing.T) {
 		},
 		{
 			"remote file with checksum",
-			"https://ftp.gnu.org/gnu/hello/hello-2.12.tar.gz",
+			"https://raw.githubusercontent.com/Snakdy/container-build-engine/refs/heads/main/README.md",
 			"/tmp/hello",
 			"",
 			false,
-			"cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab",
+			"fec6933a8c148d32aa252b21d5ef90e18afbfda9f63c0eb098dcab0cb98e6a45",
 			"/tmp/hello",
 		},
 		{
 			"remote file with checksum",
-			"https://ftp.gnu.org/gnu/hello/hello-2.12.tar.gz?checksum=cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab&archive=false",
+			"https://raw.githubusercontent.com/Snakdy/container-build-engine/refs/heads/main/README.md?checksum=fec6933a8c148d32aa252b21d5ef90e18afbfda9f63c0eb098dcab0cb98e6a45&archive=false",
 			"/tmp/",
 			"",
 			false,
 			"",
-			"/tmp/hello-2.12.tar.gz",
+			"/tmp/README.md",
 		},
 		{
 			"remote archive unpacked",
-			"https://ftp.gnu.org/gnu/hello/hello-2.12.tar.gz?checksum=cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab",
+			"https://github.com/Snakdy/container-build-engine/releases/download/v0.4.3/container-build-engine_0.4.3_linux_amd64.tar.gz",
 			"/tmp/",
 			"",
 			false,
 			"",
-			"/tmp/hello-2.12/README",
+			"/tmp/README.md",
 		},
 	}
 
@@ -167,7 +177,7 @@ func TestFile_Run(t *testing.T) {
 			})
 			require.NoError(t, err)
 			info, err := rootfs.Stat(tt.expectedPath)
-			require.NotErrorIs(t, err, os.ErrNotExist)
+			require.NotErrorIs(t, err, os.ErrNotExist, "expected file %s to exist", tt.expectedPath)
 			// https://stackoverflow.com/a/60128480
 			if tt.executable {
 				// executable by owner

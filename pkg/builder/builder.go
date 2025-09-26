@@ -1,9 +1,13 @@
 package builder
 
 import (
-	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	"fmt"
+	"path/filepath"
+	"slices"
+	"strings"
+
+	"chainguard.dev/apko/pkg/apk/fs"
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 	"github.com/Snakdy/container-build-engine/pkg/containers"
 	"github.com/Snakdy/container-build-engine/pkg/envs"
@@ -15,9 +19,6 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/types"
-	"path/filepath"
-	"slices"
-	"strings"
 )
 
 const DefaultUsername = "somebody"

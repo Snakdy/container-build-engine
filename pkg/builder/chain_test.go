@@ -2,6 +2,9 @@ package builder
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
 	"github.com/Snakdy/container-build-engine/pkg/vfs"
 	"github.com/go-logr/logr"
@@ -9,8 +12,6 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestDataChaining(t *testing.T) {

@@ -1,15 +1,16 @@
 package pipelines
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 	"github.com/Snakdy/container-build-engine/pkg/envs"
 	"github.com/Snakdy/container-build-engine/pkg/fetch"
 	"github.com/Snakdy/container-build-engine/pkg/files"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 // File downloads or adds a file.
@@ -75,6 +76,9 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 	dir := false
 	if info, err := os.Stat(copySrc); err == nil {
 		dir = info.IsDir()
+		if dir {
+			log.V(7).Info("source is a directory", "src", copySrc)
+		}
 	}
 
 	if subPath != "" && dir {
@@ -89,8 +93,20 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 		}
 	}
 
+	dstDir := false
+	if info, err := ctx.FS.Stat(path); err == nil {
+		dstDir = info.IsDir()
+		if dstDir {
+			log.V(7).Info("destination is a directory", "dst", path)
+		} else {
+			log.V(7).Info("destination is a file", "dst", path)
+		}
+	} else {
+		log.Error(err, "failed to stat file", "dst", path)
+	}
+
 	// handle short-form destination paths
-	if strings.HasSuffix(rawPath, "/") && !dir {
+	if (strings.HasSuffix(rawPath, "/") || dstDir) && !dir {
 		path = filepath.Join(path, filepath.Base(copySrc))
 	}
 

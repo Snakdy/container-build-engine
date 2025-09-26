@@ -1,13 +1,14 @@
 package files
 
 import (
-	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	"fmt"
-	"github.com/go-logr/logr"
 	"io"
 	"os"
 	"path/filepath"
+
+	"chainguard.dev/apko/pkg/apk/fs"
+	"github.com/go-logr/logr"
 )
 
 func CopyDirectory(ctx context.Context, srcDir, dest string, destFS fs.FullFS) error {
@@ -72,11 +73,11 @@ func Copy(ctx context.Context, srcFile, dstFile string, dstFS fs.FullFS) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("src", srcFile, "dst", dstFile)
 	log.V(6).Info("copying file")
 	if err := CreateIfNotExists(dstFS, filepath.Dir(dstFile), 0755); err != nil {
-		return err
+		return fmt.Errorf("ensuring heirarchy: %w", err)
 	}
 	out, err := dstFS.Create(dstFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating file: %w", err)
 	}
 
 	defer out.Close()
@@ -100,10 +101,10 @@ func Copy(ctx context.Context, srcFile, dstFile string, dstFS fs.FullFS) error {
 
 	// copy permissions from old to new
 	if err := dstFS.Chmod(dstFile, info.Mode()); err != nil {
-		return err
+		return fmt.Errorf("chmoding file: %w", err)
 	}
 	if err := dstFS.Chown(dstFile, 1001, 0); err != nil {
-		return err
+		return fmt.Errorf("chowning file: %w", err)
 	}
 
 	return nil
@@ -123,7 +124,7 @@ func CreateIfNotExists(fs fs.FullFS, dir string, perm os.FileMode) error {
 	}
 
 	if err := fs.MkdirAll(dir, perm); err != nil {
-		return fmt.Errorf("failed to create directory: '%s', error: '%s'", dir, err.Error())
+		return fmt.Errorf("creating directory: '%s': '%s'", dir, err.Error())
 	}
 
 	return nil

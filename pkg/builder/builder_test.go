@@ -2,6 +2,9 @@ package builder
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
 	"github.com/Snakdy/container-build-engine/pkg/vfs"
 	"github.com/go-logr/logr"
@@ -9,8 +12,6 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestBuilder_Build(t *testing.T) {
@@ -46,7 +47,7 @@ func TestNewBuilderFromStatements(t *testing.T) {
 			ID: "apply-env",
 			Options: map[string]any{
 				"FOO":  "bar",
-				"HOST": "ftp.gnu.org",
+				"HOST": "raw.githubusercontent.com",
 			},
 			Statement: &pipelines.Env{},
 			DependsOn: nil,
@@ -54,8 +55,8 @@ func TestNewBuilderFromStatements(t *testing.T) {
 		{
 			ID: "download-file",
 			Options: map[string]any{
-				"uri":  "https://${HOST}/gnu/hello/hello-2.12.tar.gz?checksum=cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab&archive=false",
-				"path": "/hello-2.12.tar.gz",
+				"uri":  "https://${HOST}/Snakdy/container-build-engine/refs/heads/main/README.md",
+				"path": "/README.md",
 			},
 			Statement: &pipelines.File{},
 			DependsOn: []string{"apply-env"},

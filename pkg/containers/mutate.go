@@ -3,6 +3,8 @@ package containers
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/Snakdy/container-build-engine/pkg/containers/cache"
 	"github.com/Snakdy/container-build-engine/pkg/oci/empty"
 	"github.com/go-logr/logr"
@@ -49,6 +51,9 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	log.V(2).Info("normalising base image - this may take a while if its the first time")
 	log.V(3).Info("we do this to make sure that media type between layers is consistent")
+
+	start := time.Now()
+
 	// get the original manifest
 	m, err := base.Manifest()
 	if err != nil {
@@ -123,6 +128,6 @@ func NormaliseImage(ctx context.Context, base v1.Image) (v1.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.V(3).Info("successfully normalised base image")
+	log.V(3).Info("successfully normalised base image", "duration", time.Since(start))
 	return base, nil
 }

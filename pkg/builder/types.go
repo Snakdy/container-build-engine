@@ -3,6 +3,7 @@ package builder
 import (
 	"chainguard.dev/apko/pkg/apk/fs"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
 type Builder struct {
@@ -28,6 +29,7 @@ type Options struct {
 	ForceEntrypoint bool
 	Metadata        MetadataOptions
 	FS              fs.FullFS
+	BaseImage       v1.Image
 }
 
 type MetadataOptions struct {

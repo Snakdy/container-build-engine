@@ -3,6 +3,7 @@ package containers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Snakdy/container-build-engine/pkg/oci/auth"
 	"github.com/go-logr/logr"
@@ -14,6 +15,7 @@ import (
 func Push(ctx context.Context, img v1.Image, dst string) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("ref", dst)
 	log.Info("pushing image")
+	start := time.Now()
 
 	// push the image
 	if err := crane.Push(img, dst, crane.WithContext(ctx), crane.WithAuthFromKeychain(auth.KeyChain(auth.Auth{}))); err != nil {
@@ -32,5 +34,7 @@ func Push(ctx context.Context, img v1.Image, dst string) error {
 		return err
 	}
 	fmt.Println(ref.String() + "@" + d.String())
+
+	log.Info("pushed image", "duration", time.Since(start))
 	return nil
 }

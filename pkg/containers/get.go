@@ -3,6 +3,8 @@ package containers
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/Snakdy/container-build-engine/pkg/oci/auth"
 	"github.com/Snakdy/container-build-engine/pkg/oci/empty"
 
@@ -16,7 +18,9 @@ const MagicImageScratch = "scratch"
 
 func Get(ctx context.Context, ref string) (v1.Image, error) {
 	log := logr.FromContextOrDiscard(ctx).WithValues("ref", ref)
-	log.Info("getting image")
+	log.Info("pulling image")
+
+	start := time.Now()
 
 	if ref == MagicImageScratch {
 		log.V(7).Info("image requested is a scratch image so we don't need to do anything")
@@ -39,6 +43,8 @@ func Get(ctx context.Context, ref string) (v1.Image, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Info("pulled image", "duration", time.Since(start))
 
 	// normalise the image
 	img, err = NormaliseImage(ctx, img)

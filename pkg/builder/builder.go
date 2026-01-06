@@ -63,9 +63,18 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	log := logr.FromContextOrDiscard(ctx)
 	log.Info("building image")
 
-	baseImage, err := containers.Get(ctx, b.baseRef)
-	if err != nil {
-		return nil, err
+	var baseImage v1.Image
+	var err error
+
+	// if we've already been given the base
+	// image then we can avoid pulling it again
+	if b.options.BaseImage == nil {
+		baseImage, err = containers.Get(ctx, b.baseRef)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		baseImage = b.options.BaseImage
 	}
 
 	if mt, err := baseImage.MediaType(); err == nil {

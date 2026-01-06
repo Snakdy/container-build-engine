@@ -3,6 +3,6 @@ statements:
   - id: gnu-ftp
     name: file
     options:
-      path: /hello-2.12.tar.gz
-      uri: https://ftp.gnu.org/gnu/hello/hello-2.12.tar.gz?checksum=cf04af86dc085268c5f4470fbae49b18afbc221b78096aab842d934a76bad0ab&archive=false
+      path: /ko_0.18.1_Linux_x86_64.tar.gz
+      uri: https://github.com/ko-build/ko/releases/download/v0.18.1/ko_0.18.1_Linux_x86_64.tar.gz?archive=false
       executable: true

@@ -3,9 +3,9 @@
 To ensure that images work in all environments, base/parent images are normalised.
 Essentially, we just convert non-OCI layers (e.g., `dockerv2s2`) to OCI layers.
 
-This can be slow, especially with very large layers.
+This can be slow, especially with huge layers.
 
-CBE will attempt to cache normalised layers so that subsequent runs will be able to avoid the trip to the registry to download the layer, and the time spent converting it.
+CBE will attempt to cache normalised layers so that later runs will be able to avoid the trip to the registry to download the layer, and the time spent converting it.
 
 ## Configuration
 

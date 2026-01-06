@@ -59,15 +59,19 @@ func NewBuilder(ctx context.Context, baseRef string, statements []pipelines.Orde
 	}, nil
 }
 
-func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, error) {
-	log := logr.FromContextOrDiscard(ctx)
-	log.Info("building image")
-
-	var baseImage v1.Image
+func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (containers.Result, error) {
+	var baseImage containers.Result
 	var err error
 
-	// if we've already been given the base
-	// image then we can avoid pulling it again
+	// standard behaviour to ignore multi-arch
+	// and build a single image for the current
+	// platform
+	if !b.options.GenerateIndex {
+		return b.buildSingle(ctx, platform)
+	}
+
+	// if we've already got the base
+	// image, then we can avoid pulling it again
 	if b.options.BaseImage == nil {
 		baseImage, err = containers.Get(ctx, b.baseRef)
 		if err != nil {
@@ -76,6 +80,93 @@ func (b *Builder) Build(ctx context.Context, platform *v1.Platform) (v1.Image, e
 	} else {
 		baseImage = b.options.BaseImage
 	}
+
+	switch v := baseImage.(type) {
+	case v1.Image:
+		return b.buildOne(ctx, v, platform)
+	case v1.ImageIndex:
+		return b.buildAll(ctx, v, platform)
+	default:
+		return nil, fmt.Errorf("unsupported image type: %T", baseImage)
+	}
+}
+
+func (b *Builder) buildSingle(ctx context.Context, platform *v1.Platform) (v1.Image, error) {
+	var baseImage v1.Image
+	var err error
+	// if we've already got the base
+	// image, then we can avoid pulling it again
+	if b.options.BaseImage == nil {
+		baseImage, err = containers.GetImage(ctx, b.baseRef)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		baseImage = b.options.BaseImage.(v1.Image)
+	}
+	return b.buildOne(ctx, baseImage, platform)
+}
+
+func (b *Builder) buildAll(ctx context.Context, baseIndex v1.ImageIndex, platform *v1.Platform) (v1.ImageIndex, error) {
+	log := logr.FromContextOrDiscard(ctx)
+	log.Info("building index", "platform", platform)
+
+	// vaguely based on the Ko platformMatcher
+	// logic, but not as in-depth since we don't care
+	// about Windows
+	//
+	// https://github.com/ko-build/ko/blob/main/pkg/build/gobuild.go#L1468
+	simplePlatform := v1.Platform{
+		Architecture: platform.Architecture,
+		OS:           platform.OS,
+		OSVersion:    platform.OSVersion,
+		Variant:      platform.Variant,
+	}
+
+	im, err := baseIndex.IndexManifest()
+	if err != nil {
+		return nil, err
+	}
+	var match *v1.Descriptor
+	for _, desc := range im.Manifests {
+		log.V(6).Info("checking descriptor", "platform", desc.Platform, "mediaType", desc.MediaType)
+		if desc.Platform.Satisfies(simplePlatform) {
+			log.V(3).Info("found matching platform", "platform", desc.Platform)
+			match = &desc
+			break
+		}
+	}
+	if match == nil {
+		return nil, fmt.Errorf("could not locate index manifest for platform: %s", platform)
+	}
+
+	baseImage, err := baseIndex.Image(match.Digest)
+	if err != nil {
+		return nil, fmt.Errorf("extracting image from index: %w", err)
+	}
+
+	// build the image as normal
+	image, err := b.buildOne(ctx, baseImage, platform)
+	if err != nil {
+		return nil, err
+	}
+
+	add := mutate.IndexAddendum{
+		Add: image,
+		Descriptor: v1.Descriptor{
+			MediaType:   match.MediaType,
+			URLs:        match.URLs,
+			Annotations: match.Annotations,
+			Platform:    match.Platform,
+		},
+	}
+
+	return mutate.AppendManifests(baseIndex, add), nil
+}
+
+func (b *Builder) buildOne(ctx context.Context, baseImage v1.Image, platform *v1.Platform) (v1.Image, error) {
+	log := logr.FromContextOrDiscard(ctx)
+	log.Info("building image")
 
 	if mt, err := baseImage.MediaType(); err == nil {
 		log.V(3).Info("detected base image media type", "mediaType", mt)

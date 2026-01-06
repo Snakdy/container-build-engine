@@ -1,10 +1,10 @@
-base: harbor.dcas.dev/docker.io/alpine:3.19
+base: harbor.dcas.dev/docker.io/alpine:3.23
 statements:
   - id: download-file
     name: file
     options:
       path: /home/somebody/
-      uri: https://${HOST}/gnu/hello/hello-2.12.tar.gz?checksum=${CHECKSUM}&archive=false
+      uri: https://${HOST}/ko-build/ko/releases/download/v0.18.1/ko_0.18.1_Linux_x86_64.tar.gz?archive=false
       executable: true
     depends-on:
       - set-host
@@ -12,7 +12,7 @@ statements:
   - id: set-host
     name: env
     options:
-      HOST: "ftp.gnu.org"
+      HOST: "github.com"
   - id: set-checksum
     name: env
     options:

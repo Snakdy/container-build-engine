@@ -2,8 +2,8 @@ package builder
 
 import (
 	"chainguard.dev/apko/pkg/apk/fs"
+	"github.com/Snakdy/container-build-engine/pkg/containers"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
 type Builder struct {
@@ -21,7 +21,7 @@ type Options struct {
 	// that the container will run as.
 	Uid int
 	// Shell is the default shell that will be opened
-	// whenever a user connects. If not provided
+	// whenever a user connects. If not provided,
 	// it will default to /bin/sh
 	Shell           string
 	Entrypoint      []string
@@ -29,7 +29,11 @@ type Options struct {
 	ForceEntrypoint bool
 	Metadata        MetadataOptions
 	FS              fs.FullFS
-	BaseImage       v1.Image
+	BaseImage       containers.Result
+	// GenerateIndex instructs the builder to use
+	// a multi-arch index instead of a standalone
+	// image.
+	GenerateIndex bool
 }
 
 type MetadataOptions struct {

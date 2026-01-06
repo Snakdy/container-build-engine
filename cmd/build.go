@@ -1,9 +1,13 @@
 package cmd
 
 import (
-	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+
+	"chainguard.dev/apko/pkg/apk/fs"
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 	"github.com/Snakdy/container-build-engine/pkg/builder"
 	"github.com/Snakdy/container-build-engine/pkg/containers"
@@ -12,8 +16,6 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"os"
-	"path/filepath"
 )
 
 var buildCmd = &cobra.Command{
@@ -39,7 +41,7 @@ func init() {
 	buildCmd.Flags().String(flagImage, "", "oci image path (without tag) to push the image")
 	buildCmd.Flags().StringArrayP(flagTag, "t", nil, "tags to push")
 
-	buildCmd.Flags().String(flagPlatform, "linux/amd64", "build platform")
+	buildCmd.Flags().String(flagPlatform, "", "build platform")
 
 	_ = buildCmd.MarkFlagRequired(flagConfig)
 	_ = buildCmd.MarkFlagFilename(flagConfig, ".yaml", ".yml")
@@ -56,7 +58,14 @@ func build(cmd *cobra.Command, _ []string) error {
 	ociPath, _ := cmd.Flags().GetString(flagImage)
 	tags, _ := cmd.Flags().GetStringArray(flagTag)
 
+	// if the platform value exists, then
+	// we should treat it like a multi-arch build
+	var platformUnset bool
 	platform, _ := cmd.Flags().GetString(flagPlatform)
+	if platform == "" {
+		platformUnset = true
+		platform = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
+	}
 	imgPlatform, err := v1.ParsePlatform(platform)
 	if err != nil {
 		log.Error(err, "failed to parse platform")
@@ -74,7 +83,7 @@ func build(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	b, err := newBuilder(cmd.Context(), cfg, nil, wd)
+	b, err := newBuilder(cmd.Context(), cfg, nil, wd, !platformUnset)
 	if err != nil {
 		return err
 	}
@@ -84,7 +93,11 @@ func build(cmd *cobra.Command, _ []string) error {
 	}
 
 	if localPath != "" {
-		return containers.Save(cmd.Context(), img, "image", localPath)
+		image, ok := img.(v1.Image)
+		if !ok {
+			return fmt.Errorf("cannot save %T to a local file", img)
+		}
+		return containers.Save(cmd.Context(), image, "image", localPath)
 	}
 	// push all tags
 	for _, t := range tags {
@@ -111,7 +124,7 @@ func readConfig(s string) (cbev1.Pipeline, error) {
 
 // newBuilder converts our cbev1.Pipeline into the underlying pipeline
 // resources.
-func newBuilder(ctx context.Context, pipeline cbev1.Pipeline, statementFinder pipelines.StatementFinder, workingDir string) (*builder.Builder, error) {
+func newBuilder(ctx context.Context, pipeline cbev1.Pipeline, statementFinder pipelines.StatementFinder, workingDir string, useIndex bool) (*builder.Builder, error) {
 	// if the user didn't specify a statement finder, we
 	// need to use the default one
 	if statementFinder == nil {
@@ -137,5 +150,6 @@ func newBuilder(ctx context.Context, pipeline cbev1.Pipeline, statementFinder pi
 		Command:         pipeline.Config.Command,
 		ForceEntrypoint: pipeline.Config.OverwriteEntrypoint,
 		FS:              fs.NewMemFS(),
+		GenerateIndex:   useIndex,
 	})
 }

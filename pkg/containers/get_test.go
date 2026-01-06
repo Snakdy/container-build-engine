@@ -2,11 +2,12 @@ package containers
 
 import (
 	"context"
-	"github.com/Snakdy/container-build-engine/pkg/oci/empty"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/Snakdy/container-build-engine/pkg/oci/empty"
+	"github.com/stretchr/testify/require"
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
@@ -38,6 +39,11 @@ func TestGet(t *testing.T) {
 
 			assert.Less(t, timeTaken, control)
 		}
+	})
+	t.Run("index image", func(t *testing.T) {
+		img, err := Get(ctx, "alpine:edge")
+		assert.NoError(t, err)
+		assert.NotNil(t, img)
 	})
 	t.Run("scratch image", func(t *testing.T) {
 		img, err := Get(ctx, "scratch")

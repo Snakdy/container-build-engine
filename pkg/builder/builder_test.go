@@ -20,17 +20,33 @@ func TestBuilder_Build(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
-	platform, err := v1.ParsePlatform("linux/amd64")
-	require.NoError(t, err)
+	var cases = []struct {
+		platform string
+	}{
+		{
+			"linux/amd64",
+		},
+		{
+			"linux/arm64",
+		},
+	}
 
-	builder, err := NewBuilder(ctx, "ghcr.io/djcass44/nib/srv:v1.5.0", nil, Options{
-		WorkingDir: wd,
-	})
-	require.NoError(t, err)
+	for _, tt := range cases {
+		t.Run(tt.platform, func(t *testing.T) {
+			platform, err := v1.ParsePlatform(tt.platform)
+			require.NoError(t, err)
 
-	img, err := builder.Build(ctx, platform)
-	assert.NoError(t, err)
-	assert.NotNil(t, img)
+			builder, err := NewBuilder(ctx, "ghcr.io/djcass44/nib/srv:v1.5.1", nil, Options{
+				WorkingDir:    wd,
+				GenerateIndex: true,
+			})
+			require.NoError(t, err)
+
+			img, err := builder.Build(ctx, platform)
+			assert.NoError(t, err)
+			assert.NotNil(t, img)
+		})
+	}
 }
 
 func TestNewBuilderFromStatements(t *testing.T) {
@@ -78,7 +94,10 @@ func TestNewBuilderFromStatements(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, img)
 
-	cfg, err := img.ConfigFile()
+	v, ok := img.(v1.Image)
+	require.True(t, ok)
+
+	cfg, err := v.ConfigFile()
 	assert.NoError(t, err)
 
 	assert.Contains(t, cfg.Config.Env, "FOO=bar")

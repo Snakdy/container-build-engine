@@ -111,7 +111,7 @@ func (s *File) Run(ctx *BuildContext, _ ...cbev1.Options) (cbev1.Options, error)
 	}
 
 	log.V(5).Info("copying file or directory", "src", copySrc, "dst", path)
-	if err := files.CopyDirectory(ctx.Context, copySrc, path, ctx.FS); err != nil {
+	if err := files.CopyDirectory(ctx.Context, copySrc, path, nil, ctx.FS); err != nil {
 		log.Error(err, "failed to copy directory", "src", copySrc, "dst", path)
 		return cbev1.Options{}, err
 	}

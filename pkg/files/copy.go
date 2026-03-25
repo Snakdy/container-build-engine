@@ -6,12 +6,13 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"chainguard.dev/apko/pkg/apk/fs"
 	"github.com/go-logr/logr"
 )
 
-func CopyDirectory(ctx context.Context, srcDir, dest string, destFS fs.FullFS) error {
+func CopyDirectory(ctx context.Context, srcDir, dest string, ignore []string, destFS fs.FullFS) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("src", srcDir, "dst", dest)
 	log.V(6).Info("copying directory")
 	info, err := os.Stat(srcDir)
@@ -31,6 +32,12 @@ func CopyDirectory(ctx context.Context, srcDir, dest string, destFS fs.FullFS) e
 		sourcePath := filepath.Join(srcDir, entry.Name())
 		destPath := filepath.Join(dest, entry.Name())
 
+		// ignore the cache directory and any others
+		if entry.Name() == ".cache" || slices.Contains(ignore, entry.Name()) {
+			log.V(6).Info("ignoring file or directory", "name", entry.Name())
+			continue
+		}
+
 		fileInfo, err := os.Stat(sourcePath)
 		if err != nil {
 			return err
@@ -41,7 +48,7 @@ func CopyDirectory(ctx context.Context, srcDir, dest string, destFS fs.FullFS) e
 			if err := CreateIfNotExists(destFS, destPath, 0755); err != nil {
 				return err
 			}
-			if err := CopyDirectory(ctx, sourcePath, destPath, destFS); err != nil {
+			if err := CopyDirectory(ctx, sourcePath, destPath, ignore, destFS); err != nil {
 				return err
 			}
 		case os.ModeSymlink:
@@ -73,7 +80,7 @@ func Copy(ctx context.Context, srcFile, dstFile string, dstFS fs.FullFS) error {
 	log := logr.FromContextOrDiscard(ctx).WithValues("src", srcFile, "dst", dstFile)
 	log.V(6).Info("copying file")
 	if err := CreateIfNotExists(dstFS, filepath.Dir(dstFile), 0755); err != nil {
-		return fmt.Errorf("ensuring heirarchy: %w", err)
+		return fmt.Errorf("ensuring hierarchy: %w", err)
 	}
 	out, err := dstFS.Create(dstFile)
 	if err != nil {

@@ -1,15 +1,16 @@
 package pipelines
 
 import (
-	"chainguard.dev/apko/pkg/apk/fs"
 	"context"
+	"os"
+	"testing"
+
+	"chainguard.dev/apko/pkg/apk/fs"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 // interface guard
@@ -60,4 +61,28 @@ func TestDir_Run(t *testing.T) {
 			assert.NotErrorIs(t, err, os.ErrNotExist)
 		})
 	}
+}
+
+func TestDir_RunIgnore(t *testing.T) {
+	ctx := logr.NewContext(context.TODO(), testr.NewWithOptions(t, testr.Options{Verbosity: 10}))
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	rootfs := fs.NewMemFS()
+	s := &Dir{options: map[string]any{
+		"src":    "testdata",
+		"dst":    "/tmp/",
+		"ignore": []string{"config-file"},
+	}}
+	_, err = s.Run(&BuildContext{
+		WorkingDirectory: wd,
+		Context:          ctx,
+		FS:               rootfs,
+		ConfigFile: &v1.ConfigFile{
+			Config: v1.Config{},
+		},
+	})
+	assert.NoError(t, err)
+	_, err = rootfs.Stat("/tmp/testdata/config-file")
+	assert.ErrorIs(t, err, os.ErrNotExist)
 }

@@ -1,13 +1,15 @@
 package pipelines
 
 import (
+	"errors"
+	"path/filepath"
+	"strings"
+
 	cbev1 "github.com/Snakdy/container-build-engine/pkg/api/v1"
 	"github.com/Snakdy/container-build-engine/pkg/envs"
 	"github.com/Snakdy/container-build-engine/pkg/files"
 	"github.com/Snakdy/container-build-engine/pkg/pipelines/utils"
 	"github.com/go-logr/logr"
-	"path/filepath"
-	"strings"
 )
 
 // Dir recursively copies a directory into the container.
@@ -34,6 +36,10 @@ func (s *Dir) Run(ctx *BuildContext, runtimeOptions ...cbev1.Options) (cbev1.Opt
 	if err != nil {
 		return cbev1.Options{}, err
 	}
+	ignore, err := cbev1.GetAny[[]string](options, "ignore")
+	if err != nil && !errors.Is(err, cbev1.ErrNoValue) {
+		return cbev1.Options{}, err
+	}
 
 	// expand paths
 	src = filepath.Clean(envs.ExpandEnvFunc(src, ExpandList(ctx.ConfigFile.Config.Env)))
@@ -45,7 +51,7 @@ func (s *Dir) Run(ctx *BuildContext, runtimeOptions ...cbev1.Options) (cbev1.Opt
 	}
 
 	// copy the directory
-	if err := files.CopyDirectory(ctx.Context, src, dst, ctx.FS); err != nil {
+	if err := files.CopyDirectory(ctx.Context, src, dst, ignore, ctx.FS); err != nil {
 		log.Error(err, "failed to copy directory", "src", src, "dst", dst)
 		return cbev1.Options{}, err
 	}

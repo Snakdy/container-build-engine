@@ -1,16 +1,18 @@
 package fetch
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"github.com/carlmjohnson/requests"
-	"github.com/go-logr/logr"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/carlmjohnson/requests"
+	"github.com/go-logr/logr"
 )
 
 func URL(ctx context.Context, src *url.URL) (string, error) {
@@ -40,15 +42,31 @@ func URL(ctx context.Context, src *url.URL) (string, error) {
 // such as GitHub Actions and GitLab CI.
 func ambientCredentials(uri string) (headers http.Header) {
 	headers = http.Header{}
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" && (strings.HasPrefix(uri, "https://github.com/") || strings.HasPrefix(uri, "https://api.github.com/")) {
+	if token := cmp.Or(os.Getenv("GITHUB_TOKEN"), os.Getenv("GH_TOKEN")); token != "" && (strings.HasPrefix(uri, "https://github.com/") || strings.HasPrefix(uri, "https://api.github.com/")) {
 		headers.Set("Authorization", "Bearer "+token)
 		return
 	}
-	if token := os.Getenv("GITLAB_TOKEN"); token != "" && strings.HasPrefix(uri, "https://gitlab.") {
+
+	gitlabToken := cmp.Or(os.Getenv("GITLAB_TOKEN"), os.Getenv("GL_TOKEN"))
+	jobToken := os.Getenv("CI_JOB_TOKEN")
+	serverURL := os.Getenv("CI_SERVER_URL")
+
+	isGitLab := strings.HasPrefix(uri, "https://gitlab.com/") ||
+		(serverURL != "" && strings.HasPrefix(uri, serverURL)) ||
+		strings.HasPrefix(uri, "https://gitlab.")
+
+	if !isGitLab {
+		return
+	}
+	// set the Authorization header since GitLab seems to use it for more endpoints
+	// than just setting the JOB-TOKEN header
+	headers.Set("Authorization", "Bearer "+cmp.Or(gitlabToken, jobToken))
+
+	if token := gitlabToken; token != "" {
 		headers.Set("PRIVATE-TOKEN", token)
 		return
 	}
-	if token := os.Getenv("CI_JOB_TOKEN"); token != "" && strings.HasPrefix(uri, os.Getenv("CI_SERVER_URL")) {
+	if token := jobToken; token != "" {
 		headers.Set("JOB-TOKEN", token)
 		return
 	}

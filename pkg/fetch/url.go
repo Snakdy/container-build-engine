@@ -26,7 +26,7 @@ func URL(ctx context.Context, src *url.URL) (string, error) {
 
 	log.V(6).Info("downloading file", "src", src, "dst", dst)
 
-	uri := fmt.Sprintf("%s://%s/%s", src.Scheme, src.Host, strings.TrimPrefix(src.Path, "/"))
+	uri := fmt.Sprintf("%s://%s%s", src.Scheme, src.Host, src.EscapedPath())
 	err = requests.URL(uri).
 		Headers(ambientCredentials(uri)).
 		ToFile(dst).
